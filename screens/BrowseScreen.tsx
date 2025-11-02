@@ -1,24 +1,24 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  Alert,
   ActivityIndicator,
-  SafeAreaView,
+  Alert,
   Dimensions,
   Image,
-  ScrollView,
   Modal,
+  SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from 'react-native';
-import Slider from '@react-native-community/slider';
 import RangeSlider from 'rn-range-slider';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocationAutoUpdate } from '../hooks/useLocationAutoUpdate';
-import { useFocusEffect } from '@react-navigation/native';
-import { API_BASE_URL } from '../config';
 
 
 interface UserProfile {
@@ -50,13 +50,17 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
   
   // Filter states
-  const [maxDistance, setMaxDistance] = useState<number>(25);
+  const [maxDistance, setMaxDistance] = useState<number>(15); // in miles
   const [minAge, setMinAge] = useState<number>(18);
   const [maxAge, setMaxAge] = useState<number>(80);
   const [filtersExpanded, setFiltersExpanded] = useState<boolean>(false);
   
   // Ref to track if filters have been loaded from storage
   const filtersLoadedRef = useRef(false);
+  // Ref for debounce timer
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Ref to track if initial load is done
+  const initialLoadDoneRef = useRef(false);
   
   // Age range change handler
   const handleAgeRangeChange = useCallback((low: number, high: number) => {
@@ -64,12 +68,14 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     setMaxAge(Math.round(high));
   }, []);
 
+  // Convert km to miles for display: miles = km * 0.621371
   const formatDistance = (distanceKm?: number) => {
     if (!distanceKm) return null;
-    if (distanceKm < 1) {
-      return `${Math.round(distanceKm * 1000)}m away`;
+    const distanceMiles = distanceKm * 0.621371;
+    if (distanceMiles < 1) {
+      return `${Math.round(distanceMiles * 5280)} feet away`;
     }
-    return `${distanceKm.toFixed(1)} km away`;
+    return `${distanceMiles.toFixed(1)} miles away`;
   };
 
   // Load saved filter preferences
@@ -112,8 +118,9 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
       setIsLoading(true);
       const params: any = { limit: 10 };
       
-      if (maxDistance && maxDistance < 200) {
-        params.max_distance = Math.round(maxDistance);
+      if (maxDistance && maxDistance < 125) {
+        // Convert miles to km for API: km = miles / 0.621371
+        params.max_distance = Math.round(maxDistance / 0.621371);
       }
       if (minAge && minAge > 18) {
         params.min_age = Math.round(minAge);
@@ -145,14 +152,36 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           await new Promise(resolve => setTimeout(resolve, 300));
         }
         loadUsers();
+        // Mark initial load as done
+        initialLoadDoneRef.current = true;
       };
       loadData();
     }, [])
   );
 
-  // Reload users when filters change
+  // Reload users when filters change (debounced)
   useEffect(() => {
-    loadUsers();
+    // Skip the initial load - useFocusEffect handles it
+    if (!initialLoadDoneRef.current) {
+      return;
+    }
+    
+    // Clear any existing timer
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    // Set new timer to call loadUsers after 500ms of no changes
+    debounceTimerRef.current = setTimeout(() => {
+      loadUsers();
+    }, 500);
+    
+    // Cleanup function to clear timeout
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
   }, [maxDistance, minAge, maxAge]);
 
   // Save filters to AsyncStorage when they change (after initial load)
@@ -370,11 +399,11 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           <View style={styles.expandedFilters}>
             {/* Distance Filter */}
             <View style={styles.filterSection}>
-              <Text style={styles.filterLabel}>📍 Within {Math.round(maxDistance)} km</Text>
+              <Text style={styles.filterLabel}>📍 Within {Math.round(maxDistance)} miles</Text>
               <Slider
                 style={styles.slider}
-                minimumValue={5}
-                maximumValue={200}
+                minimumValue={1}
+                maximumValue={125}
                 step={1}
                 value={maxDistance}
                 onValueChange={(value) => setMaxDistance(Math.round(value))}
@@ -383,8 +412,8 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
                 thumbTintColor="#FF6B6B"
               />
               <View style={styles.sliderLabels}>
-                <Text style={styles.sliderLabel}>5 km</Text>
-                <Text style={styles.sliderLabel}>200 km</Text>
+                <Text style={styles.sliderLabel}>1 mile</Text>
+                <Text style={styles.sliderLabel}>125 miles</Text>
               </View>
             </View>
 

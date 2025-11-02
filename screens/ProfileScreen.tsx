@@ -156,19 +156,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         </View>
 
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
-          <View style={styles.sectionContent}>
-            {user.preferences && Object.keys(user.preferences).length > 0 ? (
-              <Text style={styles.preferences}>
-                {JSON.stringify(user.preferences, null, 2)}
-              </Text>
-            ) : (
-              <Text style={styles.placeholder}>No preferences set</Text>
-            )}
-          </View>
-        </View>
-
-        <View style={styles.section}>
           <Text style={styles.sectionTitle}>Account Info</Text>
           <View style={styles.sectionContent}>
             <Text style={styles.accountInfo}>
@@ -344,11 +331,6 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 8,
     backgroundColor: '#f0f0f0',
-  },
-  preferences: {
-    fontSize: 14,
-    color: '#1a1a1a',
-    fontFamily: 'monospace',
   },
   accountInfo: {
     fontSize: 16,
