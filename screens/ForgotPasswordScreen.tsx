@@ -11,48 +11,88 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
-import { useAuth } from '../contexts/AuthContext';
+import axios from 'axios';
+import { API_BASE_URL } from '../config';
 
-interface LoginScreenProps {
+interface ForgotPasswordScreenProps {
   navigation: any;
 }
 
-const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
+const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login } = useAuth();
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please fill in all fields');
+  const validateEmail = (email: string) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleSendResetLink = async () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
+      return;
+    }
+
+    if (!validateEmail(email.trim())) {
+      Alert.alert('Error', 'Please enter a valid email address');
       return;
     }
 
     setIsLoading(true);
     try {
-      await login(email.trim(), password);
-      // Navigation will be handled by the auth state change
+      const response = await axios.post(
+        `${API_BASE_URL}/auth/forgot-password`,
+        { email: email.trim() }
+      );
+
+      // Show success message
+      Alert.alert(
+        'Success',
+        "If an account exists with that email, you'll receive password reset instructions.",
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]
+      );
     } catch (error: any) {
-      Alert.alert('Login Failed', error.message);
+      console.error('Error sending reset link:', error);
+      // Still show success message for security (don't reveal if email exists)
+      Alert.alert(
+        'Success',
+        "If an account exists with that email, you'll receive password reset instructions.",
+        [
+          {
+            text: 'OK',
+            onPress: () => {
+              navigation.goBack();
+            },
+          },
+        ]
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
+    <KeyboardAvoidingView
+      style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.content}>
-          <Text style={styles.title}>Welcome Back</Text>
-          <Text style={styles.subtitle}>Sign in to your account</Text>
+          <Text style={styles.title}>Forgot Password?</Text>
+          <Text style={styles.subtitle}>
+            Enter your email address and we'll send you instructions to reset your password.
+          </Text>
 
           <View style={styles.form}>
             <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email</Text>
+              <Text style={styles.label}>Email *</Text>
               <TextInput
                 style={styles.input}
                 value={email}
@@ -61,45 +101,28 @@ const LoginScreen: React.FC<LoginScreenProps> = ({ navigation }) => {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                editable={!isLoading}
               />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your password"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-              <TouchableOpacity 
-                style={styles.forgotPasswordLink}
-                onPress={() => navigation.navigate('ForgotPassword')}
-              >
-                <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-              </TouchableOpacity>
             </View>
 
             <TouchableOpacity
               style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleLogin}
+              onPress={handleSendResetLink}
               disabled={isLoading}
             >
               {isLoading ? (
                 <ActivityIndicator color="#fff" />
               ) : (
-                <Text style={styles.buttonText}>Login</Text>
+                <Text style={styles.buttonText}>Send Reset Link</Text>
               )}
             </TouchableOpacity>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Don't have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-                <Text style={styles.linkText}>Sign Up</Text>
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              style={styles.backLink}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={styles.backLinkText}>← Back to Login</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </ScrollView>
@@ -133,6 +156,7 @@ const styles = StyleSheet.create({
     color: '#666',
     textAlign: 'center',
     marginBottom: 40,
+    lineHeight: 24,
   },
   form: {
     width: '100%',
@@ -156,15 +180,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1a1a1a',
   },
-  forgotPasswordLink: {
-    alignSelf: 'flex-end',
-    marginTop: 8,
-  },
-  forgotPasswordText: {
-    fontSize: 14,
-    color: '#007AFF',
-    fontWeight: '500',
-  },
   button: {
     backgroundColor: '#007AFF',
     borderRadius: 12,
@@ -181,20 +196,16 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
   },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
+  backLink: {
     alignItems: 'center',
+    paddingVertical: 12,
   },
-  footerText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  linkText: {
+  backLinkText: {
     fontSize: 16,
     color: '#007AFF',
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
 
-export default LoginScreen;
+export default ForgotPasswordScreen;
+

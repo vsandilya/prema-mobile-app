@@ -294,7 +294,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           onPress={() => handlePass(user)}
           disabled={isInteracting}
         >
-          <Text style={styles.passButtonText}>✕ Pass</Text>
+          <Text style={styles.passButtonText}>❌</Text>
         </TouchableOpacity>
         
         <TouchableOpacity
@@ -302,7 +302,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           onPress={() => handleLike(user)}
           disabled={isInteracting}
         >
-          <Text style={styles.likeButtonText}>❤️ Like</Text>
+          <Text style={styles.likeButtonText}>❤️</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -572,29 +572,25 @@ const styles = StyleSheet.create({
   },
   passButton: {
     backgroundColor: '#E5E5EA',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 120,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   likeButton: {
     backgroundColor: '#FF6B6B',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 120,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   passButtonText: {
-    color: '#1a1a1a',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 45,
   },
   likeButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 45,
   },
   buttonDisabled: {
     opacity: 0.6,
