@@ -17,22 +17,7 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, logout } = useAuth();
-
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive',
-          onPress: logout
-        },
-      ]
-    );
-  };
+  const { user } = useAuth();
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -72,7 +57,19 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       <ScrollView>
         <View style={styles.content}>
           <View style={styles.header}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => navigation.navigate('Browse')}
+            >
+              <Text style={styles.backButtonText}>← Back</Text>
+            </TouchableOpacity>
             <Text style={styles.title}>My Profile</Text>
+            <TouchableOpacity
+              style={styles.editButton}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Text style={styles.editButtonText}>✏️</Text>
+            </TouchableOpacity>
           </View>
 
           <View style={styles.profileCard}>
@@ -90,37 +87,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Text style={styles.gender}>{user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}</Text>
               <Text style={styles.email}>{user.email}</Text>
             </View>
-          </View>
-
-          {/* Icon Navigation Buttons */}
-          <View style={styles.iconButtonsContainer}>
-            <TouchableOpacity
-              style={[styles.iconButton, styles.editIconButton]}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <Text style={styles.iconButtonEmoji}>✏️</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.iconButton, styles.messagesIconButton]}
-              onPress={() => navigation.navigate('Conversations')}
-            >
-              <Text style={styles.iconButtonEmoji}>💬</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.iconButton, styles.browseIconButton]}
-              onPress={() => navigation.navigate('Browse')}
-            >
-              <Text style={styles.iconButtonEmoji}>❤️</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity
-              style={[styles.iconButton, styles.matchesIconButton]}
-              onPress={() => navigation.navigate('Matches')}
-            >
-              <Text style={styles.iconButtonEmoji}>💞</Text>
-            </TouchableOpacity>
           </View>
 
           <View style={styles.section}>
@@ -174,9 +140,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-            <Text style={styles.logoutButtonText}>Logout</Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -197,10 +160,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
+  backButton: {
+    paddingVertical: 8,
+    paddingRight: 8,
+  },
+  backButtonText: {
+    fontSize: 16,
+    color: '#FF6B6B',
+    fontWeight: '500',
+  },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
     color: '#1a1a1a',
+    flex: 1,
+    textAlign: 'center',
+  },
+  editButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+  },
+  editButtonText: {
+    fontSize: 24,
   },
   profileCard: {
     backgroundColor: '#fff',
@@ -212,39 +194,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  iconButtonsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 20,
-    paddingHorizontal: 0,
-  },
-  iconButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  iconButtonEmoji: {
-    fontSize: 36,
-  },
-  editIconButton: {
-    backgroundColor: '#007AFF',
-  },
-  messagesIconButton: {
-    backgroundColor: '#34C759',
-  },
-  browseIconButton: {
-    backgroundColor: '#FF6B6B',
-  },
-  matchesIconButton: {
-    backgroundColor: '#FF69B4',
   },
   avatarContainer: {
     alignItems: 'center',
@@ -339,19 +288,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#1a1a1a',
     marginBottom: 4,
-  },
-  logoutButton: {
-    backgroundColor: '#FF3B30',
-    borderRadius: 12,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 20,
-    marginBottom: 40,
-  },
-  logoutButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
   },
   errorText: {
     fontSize: 18,

@@ -93,6 +93,10 @@ interface BrowseParams {
   max_distance?: number;
 }
 
+interface UnmatchResponse {
+  message: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -114,6 +118,7 @@ interface AuthContextType {
   passUser: (userId: number) => Promise<InteractionResponse>;
   getUsersWhoLikedMe: () => Promise<UserProfile[]>;
   getMatches: () => Promise<MatchResponse[]>;
+  unmatchUser: (userId: number) => Promise<UnmatchResponse>;
 }
 
 interface RegisterData {
@@ -377,6 +382,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const unmatchUser = async (userId: number): Promise<UnmatchResponse> => {
+    try {
+      const response = await api.delete(`/discovery/matches/${userId}`);
+      return response.data;
+    } catch (error: any) {
+      console.error('Error unmatching user:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to unmatch user');
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -396,6 +411,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     passUser,
     getUsersWhoLikedMe,
     getMatches,
+    unmatchUser,
   };
 
   return (

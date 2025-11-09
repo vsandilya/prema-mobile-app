@@ -33,7 +33,7 @@ const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = (screenWidth - 60) / 2; // 2 columns with margins
 
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
-  const { getMatches } = useAuth();
+  const { getMatches, unmatchUser } = useAuth();
   const [matches, setMatches] = useState<MatchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -87,6 +87,30 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     return photoUrl;
   };
 
+  const confirmUnmatch = (match: MatchResponse) => {
+    Alert.alert(
+      'Unmatch',
+      `Are you sure you want to unmatch with ${match.name}? This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unmatch',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              const response = await unmatchUser(match.id);
+              setMatches(prevMatches => prevMatches.filter(m => m.id !== match.id));
+              Alert.alert('Unmatched', response?.message || `You unmatched with ${match.name}.`);
+            } catch (error: any) {
+              console.error('Error unmatching user:', error);
+              Alert.alert('Error', error.message || 'Failed to unmatch. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const renderMatchCard = ({ item }: { item: MatchResponse }) => (
     <TouchableOpacity
       style={styles.matchCard}
@@ -117,9 +141,18 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       </View>
       
       <View style={styles.matchInfo}>
-        <Text style={styles.matchName} numberOfLines={1}>
-          {item.name}
-        </Text>
+        <View style={styles.matchHeader}>
+          <Text style={styles.matchName} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <TouchableOpacity
+            style={styles.unmatchButton}
+            onPress={() => confirmUnmatch(item)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.unmatchButtonText}>✖️</Text>
+          </TouchableOpacity>
+        </View>
         <Text style={styles.matchAge}>{item.age}</Text>
         <Text style={styles.matchDate}>
           {formatMatchDate(item.matched_at)}
@@ -313,11 +346,19 @@ const styles = StyleSheet.create({
   matchInfo: {
     padding: 12,
   },
+  matchHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
   matchName: {
+    flex: 1,
     fontSize: 16,
     fontWeight: '600',
     color: '#1a1a1a',
-    marginBottom: 2,
+    marginBottom: 0,
+    marginRight: 8,
   },
   matchAge: {
     fontSize: 14,
@@ -327,6 +368,15 @@ const styles = StyleSheet.create({
   matchDate: {
     fontSize: 12,
     color: '#999',
+  },
+  unmatchButton: {
+    paddingHorizontal: 4,
+    paddingVertical: 2,
+  },
+  unmatchButtonText: {
+    color: '#FF3B30',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 

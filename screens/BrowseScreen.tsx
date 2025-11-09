@@ -40,7 +40,7 @@ interface BrowseScreenProps {
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
-  const { browseUsers, likeUser, passUser } = useAuth();
+  const { browseUsers, likeUser, passUser, logout } = useAuth();
   const { initializeLocation } = useLocationAutoUpdate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -229,6 +229,21 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: logout
+        },
+      ]
+    );
+  };
+
   const moveToNextUser = () => {
     setCurrentIndex(prev => prev + 1);
     
@@ -365,13 +380,32 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
+          style={styles.logoutButton}
+          onPress={handleLogout}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.logoutButtonText}>⏻</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Browse</Text>
-        <View style={styles.placeholder} />
+        <View style={styles.headerCenter}>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => navigation.navigate('Conversations')}
+          >
+            <Text style={styles.headerIconText}>💬</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => navigation.navigate('Matches')}
+          >
+            <Text style={styles.headerIconText}>💞</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.headerIconText}>👤</Text>
+          </TouchableOpacity>
+        </View>
+        <View style={styles.headerRight} />
       </View>
 
       {/* Collapsible Filter Section */}
@@ -472,21 +506,30 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: '#e1e5e9',
   },
-  backButton: {
+  logoutButton: {
     paddingVertical: 8,
+    paddingHorizontal: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#FF6B6B',
-    fontWeight: '500',
+  logoutButtonText: {
+    fontSize: 24,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
   },
-  placeholder: {
-    width: 60,
+  headerRight: {
+    width: 40,
+  },
+  headerIconButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+  },
+  headerIconText: {
+    fontSize: 24,
   },
   loadingContainer: {
     flex: 1,

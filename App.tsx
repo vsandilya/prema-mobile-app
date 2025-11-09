@@ -41,6 +41,13 @@ function AppStack() {
         headerShown: false,
       }}
     >
+      <Stack.Screen 
+        name="Browse" 
+        component={BrowseScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen 
         name="EditProfile" 
@@ -75,13 +82,6 @@ function AppStack() {
       <Stack.Screen 
         name="Chat" 
         component={ChatScreen}
-        options={{
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen 
-        name="Browse" 
-        component={BrowseScreen}
         options={{
           headerShown: false,
         }}
