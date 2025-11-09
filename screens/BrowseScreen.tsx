@@ -38,12 +38,14 @@ interface BrowseScreenProps {
 }
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
+const photoWidth = screenWidth - 40; // Account for horizontal margins on card
 
 const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   const { browseUsers, likeUser, passUser, logout } = useAuth();
   const { initializeLocation } = useLocationAutoUpdate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isInteracting, setIsInteracting] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
@@ -184,6 +186,11 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     };
   }, [maxDistance, minAge, maxAge]);
 
+  // Reset active photo index when user changes
+  useEffect(() => {
+    setActivePhotoIndex(0);
+  }, [currentIndex]);
+
   // Save filters to AsyncStorage when they change (after initial load)
   useEffect(() => {
     // Only save if filters have been loaded from storage first
@@ -269,59 +276,93 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     return photoUrl;
   };
 
-  const renderUserCard = (user: UserProfile) => (
-    <View style={styles.userCard}>
-      <View style={styles.photoContainer}>
-        {user.photos && user.photos.length > 0 ? (
-          <Image
-            source={{ uri: getImageUrl(user.photos[0]) }}
-            style={styles.userPhoto}
-            resizeMode="cover"
-          />
-        ) : (
-          <View style={styles.placeholderPhoto}>
-            <Text style={styles.placeholderPhotoText}>
-              {user.name.charAt(0).toUpperCase()}
-            </Text>
+  const renderUserCard = (user: UserProfile) => {
+    const photos = user.photos && user.photos.length > 0 ? user.photos : [];
+
+    return (
+      <View style={styles.userCard}>
+        <View style={styles.photoContainer}>
+          {photos.length > 0 ? (
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+              style={styles.photoScroll}
+              onMomentumScrollEnd={(event) => {
+                const offsetX = event.nativeEvent.contentOffset.x;
+                const index = Math.round(offsetX / photoWidth);
+                setActivePhotoIndex(Math.min(index, photos.length - 1));
+              }}
+            >
+              {photos.map((photo, idx) => (
+                <View key={`${photo}-${idx}`} style={styles.photoItem}>
+                  <Image
+                    source={{ uri: getImageUrl(photo) }}
+                    style={styles.userPhoto}
+                    resizeMode="cover"
+                  />
+                </View>
+              ))}
+            </ScrollView>
+          ) : (
+            <View style={[styles.photoItem, styles.placeholderPhoto]}>
+              <Text style={styles.placeholderPhotoText}>
+                {user.name.charAt(0).toUpperCase()}
+              </Text>
+            </View>
+          )}
+
+          <View style={styles.userInfo}>
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userAge}>{user.age} years old</Text>
+            {formatDistance(user.distance_km) && (
+              <Text style={styles.userDistance}>
+                📍 {formatDistance(user.distance_km)}
+              </Text>
+            )}
           </View>
-        )}
-        
-        <View style={styles.userInfo}>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userAge}>{user.age} years old</Text>
-          {formatDistance(user.distance_km) && (
-            <Text style={styles.userDistance}>
-              📍 {formatDistance(user.distance_km)}
-            </Text>
+
+          {photos.length > 1 && (
+            <View style={styles.photoPaginationContainer} pointerEvents="none">
+              {photos.map((_, idx) => (
+                <View
+                  key={`dot-${idx}`}
+                  style={[
+                    styles.photoPaginationDot,
+                    idx === activePhotoIndex && styles.photoPaginationDotActive,
+                  ]}
+                />
+              ))}
+            </View>
           )}
         </View>
-      </View>
-      
-      {user.bio && (
-        <View style={styles.bioContainer}>
-          <Text style={styles.bioText}>{user.bio}</Text>
+
+        {user.bio && (
+          <View style={styles.bioContainer}>
+            <Text style={styles.bioText}>{user.bio}</Text>
+          </View>
+        )}
+
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.passButton, isInteracting && styles.buttonDisabled]}
+            onPress={() => handlePass(user)}
+            disabled={isInteracting}
+          >
+            <Text style={styles.passButtonText}>❌</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
+            onPress={() => handleLike(user)}
+            disabled={isInteracting}
+          >
+            <Text style={styles.likeButtonText}>❤️</Text>
+          </TouchableOpacity>
         </View>
-      )}
-      
-      <View style={styles.actionButtons}>
-        <TouchableOpacity
-          style={[styles.passButton, isInteracting && styles.buttonDisabled]}
-          onPress={() => handlePass(user)}
-          disabled={isInteracting}
-        >
-          <Text style={styles.passButtonText}>❌</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
-          onPress={() => handleLike(user)}
-          disabled={isInteracting}
-        >
-          <Text style={styles.likeButtonText}>❤️</Text>
-        </TouchableOpacity>
       </View>
-    </View>
-  );
+    );
+  };
 
   const renderMatchModal = () => (
     <Modal
@@ -557,14 +598,20 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     position: 'relative',
+    overflow: 'hidden',
+  },
+  photoScroll: {
+    flexGrow: 0,
+  },
+  photoItem: {
+    width: photoWidth,
+    height: screenHeight * 0.5,
   },
   userPhoto: {
     width: '100%',
-    height: screenHeight * 0.5,
+    height: '100%',
   },
   placeholderPhoto: {
-    width: '100%',
-    height: screenHeight * 0.5,
     backgroundColor: '#FF6B6B',
     justifyContent: 'center',
     alignItems: 'center',
@@ -796,6 +843,22 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#666',
     textAlign: 'center',
+  },
+  photoPaginationContainer: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    flexDirection: 'row',
+  },
+  photoPaginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    marginHorizontal: 4,
+  },
+  photoPaginationDotActive: {
+    backgroundColor: '#FFFFFF',
   },
 });
 

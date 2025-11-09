@@ -30,6 +30,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
     age: '',
     bio: '',
     gender: '',
+    seeking_gender: '',
   });
 
   const [photos, setPhotos] = useState<string[]>([]);
@@ -45,6 +46,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
     { label: 'Other', value: 'other' },
   ];
 
+  const seekingGenderOptions = [
+    { label: 'Male', value: 'male' },
+    { label: 'Female', value: 'female' },
+    { label: 'Everyone', value: 'both' },
+  ];
+
   // Initialize form data from user
   useEffect(() => {
     if (user) {
@@ -53,6 +60,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         age: user.age?.toString() || '',
         bio: user.bio || '',
         gender: user.gender || '',
+        seeking_gender: user.seeking_gender || 'both',
       });
       setPhotos(user.photos || []);
     }
@@ -63,7 +71,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   };
 
   const validateForm = () => {
-    if (!formData.name.trim() || !formData.age.trim() || !formData.gender.trim()) {
+    if (!formData.name.trim() || !formData.age.trim() || !formData.gender.trim() || !formData.seeking_gender.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
@@ -220,6 +228,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         age: parseInt(formData.age),
         bio: formData.bio.trim() || undefined,
         gender: formData.gender,
+        seeking_gender: formData.seeking_gender,
       });
 
       // Refresh user data to ensure consistency
@@ -317,6 +326,29 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
                     <Text style={[
                       styles.genderOptionText,
                       formData.gender === option.value && styles.genderOptionTextSelected
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>I'm seeking *</Text>
+              <View style={styles.genderContainer}>
+                {seekingGenderOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.genderOption,
+                      formData.seeking_gender === option.value && styles.genderOptionSelected
+                    ]}
+                    onPress={() => handleInputChange('seeking_gender', option.value)}
+                  >
+                    <Text style={[
+                      styles.genderOptionText,
+                      formData.seeking_gender === option.value && styles.genderOptionTextSelected
                     ]}>
                       {option.label}
                     </Text>

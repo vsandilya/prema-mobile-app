@@ -26,6 +26,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     age: '',
     bio: '',
     gender: '',
+    seeking_gender: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
@@ -37,13 +38,19 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     { label: 'Other', value: 'other' },
   ];
 
+  const seekingGenderOptions = [
+    { label: "Male", value: "male" },
+    { label: "Female", value: "female" },
+    { label: "Everyone", value: "both" },
+  ];
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
   const validateForm = () => {
     if (!formData.email.trim() || !formData.password.trim() || !formData.name.trim() || 
-        !formData.age.trim() || !formData.gender.trim()) {
+        !formData.age.trim() || !formData.gender.trim() || !formData.seeking_gender.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
@@ -85,6 +92,7 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         age: parseInt(formData.age),
         bio: formData.bio.trim() || undefined,
         gender: formData.gender,
+        seeking_gender: formData.seeking_gender,
       };
 
       await register(registerData);
@@ -182,6 +190,29 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                     <Text style={[
                       styles.genderOptionText,
                       formData.gender === option.value && styles.genderOptionTextSelected
+                    ]}>
+                      {option.label}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.inputContainer}>
+              <Text style={styles.label}>I'm seeking *</Text>
+              <View style={styles.genderContainer}>
+                {seekingGenderOptions.map((option) => (
+                  <TouchableOpacity
+                    key={option.value}
+                    style={[
+                      styles.genderOption,
+                      formData.seeking_gender === option.value && styles.genderOptionSelected
+                    ]}
+                    onPress={() => handleInputChange('seeking_gender', option.value)}
+                  >
+                    <Text style={[
+                      styles.genderOptionText,
+                      formData.seeking_gender === option.value && styles.genderOptionTextSelected
                     ]}>
                       {option.label}
                     </Text>
