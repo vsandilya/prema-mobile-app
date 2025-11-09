@@ -263,8 +263,8 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   };
 
   const getImageUrl = (photoUrl: string) => {
-    if (photoUrl.startsWith('/uploads/')) {
-      return `${API_BASE_URL}${photoUrl}`;
+    if (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('uploads/')) {
+      return `${API_BASE_URL}/${photoUrl.replace(/^\//, '')}`;
     }
     return photoUrl;
   };

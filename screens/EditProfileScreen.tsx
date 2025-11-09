@@ -14,7 +14,7 @@ import {
   FlatList,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, api } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config';
 import * as Location from 'expo-location';
 
@@ -23,7 +23,7 @@ interface EditProfileScreenProps {
 }
 
 const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => {
-  const { user, updateUser, updateUserPhotos, refreshUser } = useAuth();
+  const { user, updateUser, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
     name: '',
@@ -35,6 +35,8 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const [photos, setPhotos] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
+  const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  const [processingPhotoIds, setProcessingPhotoIds] = useState<string[]>([]);
 
   const genderOptions = [
     { label: 'Male', value: 'male' },
@@ -125,19 +127,86 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         allowsMultipleSelection: true,
       });
 
-      if (!result.canceled && result.assets) {
-        const newPhotos = result.assets.map(asset => asset.uri);
-        setPhotos(prev => [...prev, ...newPhotos]);
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setIsUploadingPhotos(true);
+        let latestPhotos = [...photos];
+
+        for (const asset of result.assets) {
+          try {
+            const uri = asset.uri;
+            if (!uri) continue;
+
+            const mimeType = asset.mimeType || 'image/jpeg';
+            const extensionFromName = asset.fileName?.split('.').pop()?.toLowerCase();
+            let extension = extensionFromName || mimeType.split('/')[1] || 'jpg';
+            if (extension === 'jpg') extension = 'jpeg';
+            const fileName = asset.fileName || `photo_${Date.now()}_${Math.floor(Math.random() * 1000)}.${extension}`;
+
+            const formData = new FormData();
+            formData.append('file', {
+              uri,
+              name: fileName,
+              type: mimeType,
+            } as any);
+
+            const response = await api.post('/users/photos/upload', formData, {
+              headers: {
+                'Content-Type': 'multipart/form-data',
+              },
+            });
+
+            if (response.data?.photos && Array.isArray(response.data.photos)) {
+              latestPhotos = response.data.photos;
+            } else if (response.data?.url) {
+              latestPhotos = [...latestPhotos, response.data.url];
+            }
+
+            setPhotos(latestPhotos);
+          } catch (uploadError) {
+            console.error('Error uploading photo:', uploadError);
+            Alert.alert('Upload Failed', 'Failed to upload one of the selected photos. Please try again.');
+            break;
+          }
+        }
+
+        await refreshUser();
       }
     } catch (error) {
       console.error('Error picking image:', error);
       Alert.alert('Error', 'Failed to pick image');
+    } finally {
+      setIsUploadingPhotos(false);
     }
   };
 
-  const removePhoto = (index: number) => {
-    const newPhotos = photos.filter((_, i) => i !== index);
-    setPhotos(newPhotos);
+  const removePhoto = async (index: number) => {
+    const photoUrl = photos[index];
+    if (!photoUrl) return;
+
+    // Extract filename from URL
+    const match = photoUrl.match(/\/uploads\/?([^\/]+)$/);
+    const filename = match ? match[1] : null;
+
+    if (!filename) {
+      Alert.alert('Error', 'Unable to determine photo filename for deletion.');
+      return;
+    }
+
+    setProcessingPhotoIds((prev) => [...prev, filename]);
+
+    try {
+      await api.delete(`/users/photos/${filename}`);
+
+      const newPhotos = photos.filter((_, i) => i !== index);
+      setPhotos(newPhotos);
+
+      await refreshUser();
+    } catch (error) {
+      console.error('Error deleting photo:', error);
+      Alert.alert('Error', 'Failed to delete photo. Please try again.');
+    } finally {
+      setProcessingPhotoIds((prev) => prev.filter((id) => id !== filename));
+    }
   };
 
   const handleSave = async () => {
@@ -145,13 +214,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
     setIsLoading(true);
     try {
-      // First update photos if they changed
-      if (JSON.stringify(photos) !== JSON.stringify(user?.photos || [])) {
-        console.log('Updating photos:', photos);
-        updateUserPhotos(photos);
-      }
-
-      // Then update other profile fields
+      // Update profile fields
       await updateUser({
         name: formData.name.trim(),
         age: parseInt(formData.age),
@@ -193,8 +256,13 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         <TouchableOpacity
           style={styles.removePhotoButton}
           onPress={() => removePhoto(index)}
+          disabled={processingPhotoIds.includes(item)}
         >
-          <Text style={styles.removePhotoButtonText}>✕</Text>
+          {processingPhotoIds.includes(item) ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.removePhotoButtonText}>✕</Text>
+          )}
         </TouchableOpacity>
       </View>
     );
@@ -295,8 +363,16 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
             {/* Photos */}
             <View style={styles.inputContainer}>
               <Text style={styles.label}>Photos</Text>
-              <TouchableOpacity style={styles.addPhotoButton} onPress={pickImage}>
-                <Text style={styles.addPhotoButtonText}>➕ Add Photos</Text>
+              <TouchableOpacity
+                style={[styles.addPhotoButton, isUploadingPhotos && styles.buttonDisabled]}
+                onPress={pickImage}
+                disabled={isUploadingPhotos}
+              >
+                {isUploadingPhotos ? (
+                  <ActivityIndicator color="#007AFF" />
+                ) : (
+                  <Text style={styles.addPhotoButtonText}>➕ Add Photos</Text>
+                )}
               </TouchableOpacity>
               {photos.length > 0 && (
                 <View style={styles.photosContainer}>

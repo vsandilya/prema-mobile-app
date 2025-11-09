@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileScreenProps {
@@ -28,9 +29,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   };
 
   const getImageUrl = (photoUrl: string) => {
-    // Convert relative URL to full URL
-    if (photoUrl.startsWith('/uploads/')) {
-      return `http://192.168.30.238:8000${photoUrl}`;
+    if (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('uploads/')) {
+      return `${API_BASE_URL}/${photoUrl.replace(/^\//, '')}`;
     }
     return photoUrl;
   };
