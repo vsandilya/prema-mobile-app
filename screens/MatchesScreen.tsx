@@ -15,6 +15,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
+import GradientBackground from '../components/GradientBackground';
 
 interface MatchResponse {
   id: number;
@@ -163,63 +164,66 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B6B" />
-          <Text style={styles.loadingText}>Loading your matches...</Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF6B6B" />
+            <Text style={styles.loadingText}>Loading your matches...</Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Matches</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {matches.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>💔</Text>
-          <Text style={styles.emptyTitle}>No Matches Yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Start browsing to find people who like you back!
-          </Text>
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
           <TouchableOpacity
-            style={styles.browseButton}
-            onPress={() => navigation.navigate('Browse')}
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
           >
-            <Text style={styles.browseButtonText}>Start Browsing</Text>
+            <Text style={styles.backButtonText}>← Back</Text>
           </TouchableOpacity>
+          <Text style={styles.title}>Matches</Text>
+          <View style={styles.placeholder} />
         </View>
-      ) : (
-        <FlatList
-          data={matches}
-          renderItem={renderMatchCard}
-          keyExtractor={(item) => item.id.toString()}
-          numColumns={2}
-          contentContainerStyle={styles.matchesList}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-          }
-          columnWrapperStyle={styles.row}
-        />
-      )}
-    </SafeAreaView>
+
+        {matches.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>💔</Text>
+            <Text style={styles.emptyTitle}>No Matches Yet</Text>
+            <Text style={styles.emptySubtitle}>
+              Start browsing to find people who like you back!
+            </Text>
+            <TouchableOpacity
+              style={styles.browseButton}
+              onPress={() => navigation.navigate('Browse')}
+            >
+              <Text style={styles.browseButtonText}>Start Browsing</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <FlatList
+            data={matches}
+            renderItem={renderMatchCard}
+            keyExtractor={(item) => item.id.toString()}
+            numColumns={2}
+            contentContainerStyle={styles.matchesList}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+            columnWrapperStyle={styles.row}
+          />
+        )}
+      </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
@@ -227,9 +231,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.15)',
   },
   backButton: {
     paddingVertical: 8,
@@ -240,9 +244,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   placeholder: {
     width: 60,
@@ -253,15 +257,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: '#FFFFFF',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    padding: 40,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    margin: 24,
+    borderRadius: 24,
   },
   emptyIcon: {
     fontSize: 64,
@@ -269,22 +276,23 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 30,
+    marginBottom: 20,
   },
   browseButton: {
-    backgroundColor: '#FF6B6B',
-    paddingHorizontal: 24,
+    backgroundColor: 'rgba(255,107,107,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
     paddingVertical: 12,
-    borderRadius: 25,
+    paddingHorizontal: 24,
   },
   browseButtonText: {
     color: '#fff',
@@ -293,15 +301,19 @@ const styles = StyleSheet.create({
   },
   matchesList: {
     padding: 20,
+    paddingBottom: 40,
   },
   row: {
     justifyContent: 'space-between',
-    marginBottom: 20,
   },
   matchCard: {
+    backgroundColor: 'rgba(255,255,255,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 20,
     width: cardWidth,
-    backgroundColor: '#fff',
-    borderRadius: 15,
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -353,21 +365,20 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   matchName: {
-    flex: 1,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#1a1a1a',
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 0,
     marginRight: 8,
   },
   matchAge: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.85)',
     marginBottom: 4,
   },
   matchDate: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
   },
   unmatchButton: {
     paddingHorizontal: 4,

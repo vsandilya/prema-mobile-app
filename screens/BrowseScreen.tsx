@@ -19,6 +19,7 @@ import RangeSlider from 'rn-range-slider';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocationAutoUpdate } from '../hooks/useLocationAutoUpdate';
+import GradientBackground from '../components/GradientBackground';
 
 
 interface UserProfile {
@@ -41,7 +42,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const photoWidth = screenWidth - 40; // Account for horizontal margins on card
 
 const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
-  const { browseUsers, likeUser, passUser, logout } = useAuth();
+  const { browseUsers, likeUser, passUser, logout, getUsersWhoLikedMe } = useAuth();
   const { initializeLocation } = useLocationAutoUpdate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -50,6 +51,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   const [isInteracting, setIsInteracting] = useState(false);
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [matchedUser, setMatchedUser] = useState<UserProfile | null>(null);
+  const [likesCount, setLikesCount] = useState(0);
   
   // Filter states
   const [maxDistance, setMaxDistance] = useState<number>(15); // in miles
@@ -143,6 +145,16 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     }
   };
 
+  // Load likes count
+  const loadLikesCount = async () => {
+    try {
+      const likes = await getUsersWhoLikedMe();
+      setLikesCount(likes.length);
+    } catch (error) {
+      console.error('Error loading likes count:', error);
+    }
+  };
+
   // Load users and update location when screen focuses
   useFocusEffect(
     useCallback(() => {
@@ -154,6 +166,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           await new Promise(resolve => setTimeout(resolve, 300));
         }
         loadUsers();
+        loadLikesCount();
         // Mark initial load as done
         initialLoadDoneRef.current = true;
       };
@@ -349,7 +362,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
             onPress={() => handlePass(user)}
             disabled={isInteracting}
           >
-            <Text style={styles.passButtonText}>❌</Text>
+            <Text style={styles.passButtonText}>✕</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -406,19 +419,22 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#FF6B6B" />
-          <Text style={styles.loadingText}>Finding people near you...</Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#FF6B6B" />
+            <Text style={styles.loadingText}>Finding people near you...</Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   const currentUser = users.length > 0 ? users[currentIndex] : null;
 
   return (
-    <SafeAreaView style={styles.container}>
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.logoutButton}
@@ -431,19 +447,37 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
             style={styles.headerIconButton}
             onPress={() => navigation.navigate('Conversations')}
           >
-            <Text style={styles.headerIconText}>💬</Text>
+            <Text style={styles.headerIconTextMessages}>💬</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.headerIconButton}
+            onPress={() => {
+              navigation.navigate('Likes');
+              loadLikesCount(); // Refresh count after navigating
+            }}
+          >
+            <View style={styles.headerIconWithBadge}>
+              <Text style={styles.headerIconTextLikes}>🔥</Text>
+              {likesCount > 0 && (
+                <View style={styles.badge}>
+                  <Text style={styles.badgeText}>
+                    {likesCount > 99 ? '99+' : likesCount}
+                  </Text>
+                </View>
+              )}
+            </View>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => navigation.navigate('Matches')}
           >
-            <Text style={styles.headerIconText}>💞</Text>
+            <Text style={styles.headerIconTextMatches}>💞</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.headerIconButton}
             onPress={() => navigation.navigate('Profile')}
           >
-            <Text style={styles.headerIconText}>👤</Text>
+            <Text style={styles.headerIconTextProfile}>👤</Text>
           </TouchableOpacity>
         </View>
         <View style={styles.headerRight} />
@@ -528,14 +562,14 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
       </ScrollView>
 
       {renderMatchModal()}
-    </SafeAreaView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
@@ -543,9 +577,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.15)',
   },
   logoutButton: {
     paddingVertical: 8,
@@ -555,6 +589,7 @@ const styles = StyleSheet.create({
   },
   logoutButtonText: {
     fontSize: 24,
+    color: '#FF3B30',
   },
   headerCenter: {
     flexDirection: 'row',
@@ -572,6 +607,44 @@ const styles = StyleSheet.create({
   headerIconText: {
     fontSize: 24,
   },
+  headerIconTextMessages: {
+    fontSize: 24,
+    color: '#007AFF',
+  },
+  headerIconTextLikes: {
+    fontSize: 24,
+    color: '#FF9500',
+  },
+  headerIconTextMatches: {
+    fontSize: 24,
+    color: '#FF2D87',
+  },
+  headerIconTextProfile: {
+    fontSize: 24,
+    color: '#9B59B6',
+  },
+  headerIconWithBadge: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
+  },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -587,8 +660,10 @@ const styles = StyleSheet.create({
   },
   userCard: {
     margin: 20,
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 20,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
@@ -647,10 +722,11 @@ const styles = StyleSheet.create({
   bioContainer: {
     padding: 20,
     paddingTop: 15,
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   bioText: {
     fontSize: 16,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     lineHeight: 24,
   },
   actionButtons: {
@@ -659,28 +735,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingBottom: 30,
+    backgroundColor: 'rgba(0,0,0,0.25)',
   },
   passButton: {
-    backgroundColor: '#E5E5EA',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: '#D4A574',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 20,
+    minWidth: 75,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   likeButton: {
-    backgroundColor: '#FF6B6B',
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    backgroundColor: '#FF2D87',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 18,
+    paddingVertical: 9,
+    borderRadius: 20,
+    minWidth: 75,
     alignItems: 'center',
-    justifyContent: 'center',
   },
   passButtonText: {
-    fontSize: 45,
+    fontSize: 28,
+    color: '#FFFFFF',
   },
   likeButtonText: {
-    fontSize: 45,
+    fontSize: 28,
+    color: '#FFFFFF',
   },
   buttonDisabled: {
     opacity: 0.6,
@@ -692,7 +775,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   matchModal: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderRadius: 20,
     padding: 30,
     margin: 20,
@@ -706,12 +789,12 @@ const styles = StyleSheet.create({
   matchTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#1F2933',
     marginBottom: 10,
   },
   matchSubtitle: {
     fontSize: 18,
-    color: '#666',
+    color: '#4B5563',
     textAlign: 'center',
     marginBottom: 30,
     lineHeight: 24,
@@ -721,19 +804,19 @@ const styles = StyleSheet.create({
     gap: 15,
   },
   keepBrowsingButton: {
-    backgroundColor: '#E5E5EA',
+    backgroundColor: 'rgba(229,229,234,0.8)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
   },
   sendMessageButton: {
-    backgroundColor: '#FF6B6B',
+    backgroundColor: 'rgba(255,107,107,0.9)',
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderRadius: 25,
   },
   keepBrowsingButtonText: {
-    color: '#1a1a1a',
+    color: '#1F2933',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -744,9 +827,9 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     paddingHorizontal: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   filterSummaryBar: {
     flexDirection: 'row',
@@ -761,12 +844,12 @@ const styles = StyleSheet.create({
   },
   filterSummaryText: {
     fontSize: 14,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   filterSummarySeparator: {
     fontSize: 14,
-    color: '#999',
+    color: 'rgba(255,255,255,0.6)',
     marginHorizontal: 8,
   },
   filterSummaryRight: {
@@ -775,7 +858,7 @@ const styles = StyleSheet.create({
   },
   chevron: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.7)',
   },
   expandedFilters: {
     paddingTop: 10,
@@ -787,7 +870,7 @@ const styles = StyleSheet.create({
   filterLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   slider: {
@@ -807,7 +890,7 @@ const styles = StyleSheet.create({
   },
   rail: {
     height: 6,
-    backgroundColor: '#E5E5EA',
+    backgroundColor: 'rgba(255,255,255,0.25)',
     borderRadius: 3,
   },
   railSelected: {
@@ -832,16 +915,19 @@ const styles = StyleSheet.create({
   noMatchesContainer: {
     padding: 40,
     alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    margin: 20,
+    borderRadius: 16,
   },
   noMatchesText: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   noMatchesSubtext: {
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
   },
   photoPaginationContainer: {

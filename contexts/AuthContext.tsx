@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import { initializePushNotifications } from '../utils/notifications';
 
 // Create axios instance with base configuration
 const api = axios.create({
@@ -107,6 +108,7 @@ interface AuthContextType {
   updateUser: (userData: Partial<User>) => Promise<void>;
   updateUserPhotos: (photos: string[]) => void;
   refreshUser: () => Promise<void>;
+  registerForPushNotifications: () => Promise<void>;
   // Messaging methods
   sendMessage: (receiverId: number, content: string) => Promise<Message>;
   getConversations: () => Promise<ConversationSummary[]>;
@@ -167,6 +169,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           try {
             const response = await api.get('/auth/me');
             setUser(response.data);
+            
+            // Register for push notifications if user is already logged in
+            initializePushNotifications(storedToken).catch(err => {
+              console.error('Failed to initialize push notifications on app start:', err);
+            });
           } catch (error) {
             // Token might be invalid, clear it
             await AsyncStorage.removeItem('authToken');
@@ -208,6 +215,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Fetch user data
       const userResponse = await api.get('/auth/me');
       setUser(userResponse.data);
+      
+      // Register for push notifications after successful login
+      // Call asynchronously without blocking login
+      initializePushNotifications(access_token).catch(err => {
+        console.error('Failed to initialize push notifications:', err);
+      });
     } catch (error: any) {
       if (error.response?.status === 401) {
         throw new Error('Invalid email or password');
@@ -237,10 +250,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const logout = async () => {
     try {
+      console.log('[Auth] Logout started');
       await AsyncStorage.removeItem('authToken');
+      console.log('[Auth] Removed authToken from AsyncStorage');
       setToken(null);
       setUser(null);
       delete api.defaults.headers.common['Authorization'];
+      console.log('[Auth] Cleared token, user, and Authorization header');
+      // Allow state updates to flush before resetting navigation
+      setTimeout(() => {
+        try {
+          const { resetToAuth } = require('../utils/navigation');
+          resetToAuth();
+          console.log('[Auth] Navigation reset to Auth stack');
+        } catch (e) {
+          console.log('[Auth] Navigation reset failed or not ready', e);
+        }
+      }, 0);
     } catch (error) {
       console.error('Error during logout:', error);
     }
@@ -392,6 +418,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const registerForPushNotifications = async (): Promise<void> => {
+    try {
+      if (!token) {
+        console.warn('Cannot register for push notifications: no auth token');
+        return;
+      }
+      await initializePushNotifications(token);
+    } catch (error) {
+      console.error('Error registering for push notifications:', error);
+      // Don't throw - push notifications are not critical for app functionality
+    }
+  };
+
   const value: AuthContextType = {
     user,
     token,
@@ -402,6 +441,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     updateUser,
     updateUserPhotos,
     refreshUser,
+    registerForPushNotifications,
     sendMessage,
     getConversations,
     getMessagesWithUser,

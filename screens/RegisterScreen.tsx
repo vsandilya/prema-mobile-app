@@ -11,6 +11,7 @@ import {
   Platform,
   ScrollView,
 } from 'react-native';
+import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
 
 interface RegisterScreenProps {
@@ -105,164 +106,165 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container} 
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join our dating community</Text>
+    <GradientBackground>
+      <KeyboardAvoidingView 
+        style={styles.container} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Create Account</Text>
+            <Text style={styles.subtitle}>Join our dating community</Text>
 
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Email *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.email}
-                onChangeText={(value) => handleInputChange('email', value)}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                autoCapitalize="none"
-                autoCorrect={false}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Password *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.password}
-                onChangeText={(value) => handleInputChange('password', value)}
-                placeholder="Enter your password"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm Password *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.confirmPassword}
-                onChangeText={(value) => handleInputChange('confirmPassword', value)}
-                placeholder="Confirm your password"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Full Name *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.name}
-                onChangeText={(value) => handleInputChange('name', value)}
-                placeholder="Enter your full name"
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Age *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.age}
-                onChangeText={(value) => handleInputChange('age', value)}
-                placeholder="Enter your age"
-                keyboardType="numeric"
-                maxLength={2}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Gender *</Text>
-              <View style={styles.genderContainer}>
-                {genderOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.genderOption,
-                      formData.gender === option.value && styles.genderOptionSelected
-                    ]}
-                    onPress={() => handleInputChange('gender', option.value)}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === option.value && styles.genderOptionTextSelected
-                    ]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Email *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.email}
+                  onChangeText={(value) => handleInputChange('email', value)}
+                  placeholder="Enter your email"
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
               </View>
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>I'm seeking *</Text>
-              <View style={styles.genderContainer}>
-                {seekingGenderOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.genderOption,
-                      formData.seeking_gender === option.value && styles.genderOptionSelected
-                    ]}
-                    onPress={() => handleInputChange('seeking_gender', option.value)}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.seeking_gender === option.value && styles.genderOptionTextSelected
-                    ]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.password}
+                  onChangeText={(value) => handleInputChange('password', value)}
+                  placeholder="Enter your password"
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
               </View>
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Bio</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={formData.bio}
-                onChangeText={(value) => handleInputChange('bio', value)}
-                placeholder="Tell us about yourself..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirm Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.confirmPassword}
+                  onChangeText={(value) => handleInputChange('confirmPassword', value)}
+                  placeholder="Confirm your password"
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
 
-            <TouchableOpacity
-              style={[styles.button, isLoading && styles.buttonDisabled]}
-              onPress={handleRegister}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Sign Up</Text>
-              )}
-            </TouchableOpacity>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.name}
+                  onChangeText={(value) => handleInputChange('name', value)}
+                  placeholder="Enter your full name"
+                  autoCapitalize="words"
+                />
+              </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>Already have an account? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.linkText}>Sign In</Text>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Age *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.age}
+                  onChangeText={(value) => handleInputChange('age', value)}
+                  placeholder="Enter your age"
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Gender *</Text>
+                <View style={styles.genderContainer}>
+                  {genderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.genderOption,
+                        formData.gender === option.value && styles.genderOptionSelected
+                      ]}
+                      onPress={() => handleInputChange('gender', option.value)}
+                    >
+                      <Text style={[
+                        styles.genderOptionText,
+                        formData.gender === option.value && styles.genderOptionTextSelected
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>I'm seeking *</Text>
+                <View style={styles.genderContainer}>
+                  {seekingGenderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.genderOption,
+                        formData.seeking_gender === option.value && styles.genderOptionSelected
+                      ]}
+                      onPress={() => handleInputChange('seeking_gender', option.value)}
+                    >
+                      <Text style={[
+                        styles.genderOptionText,
+                        formData.seeking_gender === option.value && styles.genderOptionTextSelected
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Bio</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.bio}
+                  onChangeText={(value) => handleInputChange('bio', value)}
+                  placeholder="Tell us about yourself..."
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[styles.button, isLoading && styles.buttonDisabled]}
+                onPress={handleRegister}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Sign Up</Text>
+                )}
               </TouchableOpacity>
+
+              <View style={styles.footer}>
+                <Text style={styles.footerText}>Already have an account? </Text>
+                <TouchableOpacity onPress={() => navigation.navigate('Login')}>
+                  <Text style={styles.linkText}>Sign In</Text>
+                </TouchableOpacity>
+              </View>
             </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flexGrow: 1,

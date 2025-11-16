@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
@@ -16,6 +16,9 @@ import ConversationsScreen from './screens/ConversationsScreen';
 import ChatScreen from './screens/ChatScreen';
 import BrowseScreen from './screens/BrowseScreen';
 import MatchesScreen from './screens/MatchesScreen';
+import LikesScreen from './screens/LikesScreen';
+import { setupNotificationListeners, getNotificationData } from './utils/notifications';
+import { navigationRef } from './utils/navigation';
 
 const Stack = createStackNavigator();
 
@@ -93,12 +96,60 @@ function AppStack() {
           headerShown: false,
         }}
       />
+      <Stack.Screen 
+        name="Likes" 
+        component={LikesScreen}
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack.Navigator>
   );
 }
 
 function AppNavigator() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, token } = useAuth();
+
+  useEffect(() => {
+    if (!user || !token) return;
+
+    // Setup notification listeners
+    const cleanup = setupNotificationListeners(
+      // Notification received (foreground)
+      (notification) => {
+        console.log('Notification received:', notification);
+        // You can show an in-app notification here if needed
+      },
+      // Notification tapped
+      (response) => {
+        console.log('Notification tapped:', response);
+        const data = getNotificationData(response);
+        
+        if (!navigationRef.current) return;
+
+        // Navigate based on notification type
+        if (data?.type === 'match' || data?.screen === 'Matches') {
+          navigationRef.current.navigate('Matches');
+        } else if (data?.type === 'message' || data?.screen === 'Conversations') {
+          navigationRef.current.navigate('Conversations');
+          // If we have a user_id in the data, we could navigate to specific chat
+          if (data.user_id) {
+            // Navigate to specific chat after a short delay
+            setTimeout(() => {
+              navigationRef.current?.navigate('Chat', {
+                userId: data.user_id,
+                userName: data.user_name || 'User'
+              });
+            }, 500);
+          }
+        } else if (data?.type === 'like' || data?.screen === 'Browse') {
+          navigationRef.current.navigate('Browse');
+        }
+      }
+    );
+
+    return cleanup;
+  }, [user, token]);
 
   if (isLoading) {
     return (
@@ -109,7 +160,7 @@ function AppNavigator() {
   }
 
   return (
-    <NavigationContainer>
+    <NavigationContainer ref={navigationRef}>
       {user ? <AppStack /> : <AuthStack />}
     </NavigationContainer>
   );

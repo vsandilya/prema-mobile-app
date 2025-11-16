@@ -11,6 +11,7 @@ import {
   View
 } from 'react-native';
 import { API_BASE_URL } from '../config';
+import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileScreenProps {
@@ -46,110 +47,113 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.errorText}>No user data available</Text>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <Text style={styles.errorText}>No user data available</Text>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView>
-        <View style={styles.content}>
-          <View style={styles.header}>
-            <TouchableOpacity
-              style={styles.backButton}
-              onPress={() => navigation.navigate('Browse')}
-            >
-              <Text style={styles.backButtonText}>← Back</Text>
-            </TouchableOpacity>
-            <Text style={styles.title}>My Profile</Text>
-            <TouchableOpacity
-              style={styles.editButton}
-              onPress={() => navigation.navigate('EditProfile')}
-            >
-              <Text style={styles.editButtonText}>✏️</Text>
-            </TouchableOpacity>
-          </View>
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <ScrollView>
+          <View style={styles.content}>
+            <View style={styles.header}>
+              <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => navigation.navigate('Browse')}
+              >
+                <Text style={styles.backButtonText}>← Back</Text>
+              </TouchableOpacity>
+              <Text style={styles.title}>My Profile</Text>
+              <TouchableOpacity
+                style={styles.editButton}
+                onPress={() => navigation.navigate('EditProfile')}
+              >
+                <Text style={styles.editButtonText}>✏️</Text>
+              </TouchableOpacity>
+            </View>
 
-          <View style={styles.profileCard}>
-            <View style={styles.avatarContainer}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
-                  {user.name.charAt(0).toUpperCase()}
-                </Text>
+            <View style={styles.profileCard}>
+              <View style={styles.avatarContainer}>
+                <View style={styles.avatar}>
+                  <Text style={styles.avatarText}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              </View>
+
+              <View style={styles.userInfo}>
+                <Text style={styles.name}>{user.name}</Text>
+                <Text style={styles.age}>{user.age} years old</Text>
+                <Text style={styles.gender}>{user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}</Text>
+                <Text style={styles.email}>{user.email}</Text>
               </View>
             </View>
 
-            <View style={styles.userInfo}>
-              <Text style={styles.name}>{user.name}</Text>
-              <Text style={styles.age}>{user.age} years old</Text>
-              <Text style={styles.gender}>{user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}</Text>
-              <Text style={styles.email}>{user.email}</Text>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>About Me</Text>
+              <View style={styles.sectionContent}>
+                {user.bio ? (
+                  <Text style={styles.bio}>{user.bio}</Text>
+                ) : (
+                  <Text style={styles.placeholder}>No bio added yet</Text>
+                )}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>About Me</Text>
-            <View style={styles.sectionContent}>
-              {user.bio ? (
-                <Text style={styles.bio}>{user.bio}</Text>
-              ) : (
-                <Text style={styles.placeholder}>No bio added yet</Text>
-              )}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Photos</Text>
+              <View style={styles.sectionContent}>
+                {user.photos && user.photos.length > 0 ? (
+                  <View>
+                    <Text style={styles.photoCount}>
+                      📸 {user.photos.length} photo{user.photos.length !== 1 ? 's' : ''} uploaded
+                    </Text>
+                    <FlatList
+                      data={user.photos}
+                      renderItem={renderPhoto}
+                      keyExtractor={(item, index) => `${item}-${index}`}
+                      numColumns={3}
+                      scrollEnabled={false}
+                      contentContainerStyle={styles.photosGrid}
+                    />
+                  </View>
+                ) : (
+                  <Text style={styles.placeholder}>No photos uploaded yet</Text>
+                )}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Photos</Text>
-            <View style={styles.sectionContent}>
-              {user.photos && user.photos.length > 0 ? (
-                <View>
-                  <Text style={styles.photoCount}>
-                    📸 {user.photos.length} photo{user.photos.length !== 1 ? 's' : ''} uploaded
-                  </Text>
-                  <FlatList
-                    data={user.photos}
-                    renderItem={renderPhoto}
-                    keyExtractor={(item, index) => `${item}-${index}`}
-                    numColumns={3}
-                    scrollEnabled={false}
-                    contentContainerStyle={styles.photosGrid}
-                  />
-                </View>
-              ) : (
-                <Text style={styles.placeholder}>No photos uploaded yet</Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Account Info</Text>
-            <View style={styles.sectionContent}>
-              <Text style={styles.accountInfo}>
-                Member since: {formatDate(user.created_at)}
-              </Text>
-              <Text style={styles.accountInfo}>
-                Status: {user.is_active ? 'Active' : 'Inactive'}
-              </Text>
-              {user.updated_at && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Account Info</Text>
+              <View style={styles.sectionContent}>
                 <Text style={styles.accountInfo}>
-                  Last updated: {formatDate(user.updated_at)}
+                  Member since: {formatDate(user.created_at)}
                 </Text>
-              )}
+                <Text style={styles.accountInfo}>
+                  Status: {user.is_active ? 'Active' : 'Inactive'}
+                </Text>
+                {user.updated_at && (
+                  <Text style={styles.accountInfo}>
+                    Last updated: {formatDate(user.updated_at)}
+                  </Text>
+                )}
+              </View>
             </View>
-          </View>
 
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   content: {
     padding: 20,

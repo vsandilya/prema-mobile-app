@@ -16,6 +16,7 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth, api } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config';
+import GradientBackground from '../components/GradientBackground';
 import * as Location from 'expo-location';
 
 interface EditProfileScreenProps {
@@ -278,171 +279,172 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          <View style={styles.form}>
-            {/* Name */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Full Name *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.name}
-                onChangeText={(value) => handleInputChange('name', value)}
-                placeholder="Enter your full name"
-                autoCapitalize="words"
-              />
-            </View>
-
-            {/* Age */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Age *</Text>
-              <TextInput
-                style={styles.input}
-                value={formData.age}
-                onChangeText={(value) => handleInputChange('age', value)}
-                placeholder="Enter your age"
-                keyboardType="numeric"
-                maxLength={2}
-              />
-            </View>
-
-            {/* Gender */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Gender *</Text>
-              <View style={styles.genderContainer}>
-                {genderOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.genderOption,
-                      formData.gender === option.value && styles.genderOptionSelected
-                    ]}
-                    onPress={() => handleInputChange('gender', option.value)}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.gender === option.value && styles.genderOptionTextSelected
-                    ]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.content}>
+            <View style={styles.form}>
+              {/* Name */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Full Name *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.name}
+                  onChangeText={(value) => handleInputChange('name', value)}
+                  placeholder="Enter your full name"
+                  autoCapitalize="words"
+                />
               </View>
-            </View>
 
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>I'm seeking *</Text>
-              <View style={styles.genderContainer}>
-                {seekingGenderOptions.map((option) => (
-                  <TouchableOpacity
-                    key={option.value}
-                    style={[
-                      styles.genderOption,
-                      formData.seeking_gender === option.value && styles.genderOptionSelected
-                    ]}
-                    onPress={() => handleInputChange('seeking_gender', option.value)}
-                  >
-                    <Text style={[
-                      styles.genderOptionText,
-                      formData.seeking_gender === option.value && styles.genderOptionTextSelected
-                    ]}>
-                      {option.label}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
+              {/* Age */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Age *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={formData.age}
+                  onChangeText={(value) => handleInputChange('age', value)}
+                  placeholder="Enter your age"
+                  keyboardType="numeric"
+                  maxLength={2}
+                />
               </View>
-            </View>
 
-            {/* Bio */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Bio</Text>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={formData.bio}
-                onChangeText={(value) => handleInputChange('bio', value)}
-                placeholder="Tell us about yourself..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
-
-            {/* Location Update Button */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Location</Text>
-              <TouchableOpacity
-                style={[styles.locationButton, isUpdatingLocation && styles.buttonDisabled]}
-                onPress={handleUpdateLocation}
-                disabled={isUpdatingLocation}
-              >
-                {isUpdatingLocation ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.locationButtonText}>📍 Update My Location</Text>
-                )}
-              </TouchableOpacity>
-              {user?.location_latitude && user?.location_longitude && (
-                <Text style={styles.locationInfo}>
-                  Current: {user.location_latitude.toFixed(4)}, {user.location_longitude.toFixed(4)}
-                </Text>
-              )}
-            </View>
-
-            {/* Photos */}
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Photos</Text>
-              <TouchableOpacity
-                style={[styles.addPhotoButton, isUploadingPhotos && styles.buttonDisabled]}
-                onPress={pickImage}
-                disabled={isUploadingPhotos}
-              >
-                {isUploadingPhotos ? (
-                  <ActivityIndicator color="#007AFF" />
-                ) : (
-                  <Text style={styles.addPhotoButtonText}>➕ Add Photos</Text>
-                )}
-              </TouchableOpacity>
-              {photos.length > 0 && (
-                <View style={styles.photosContainer}>
-                  <FlatList
-                    data={photos}
-                    renderItem={renderPhoto}
-                    keyExtractor={(item, index) => `${item}-${index}`}
-                    numColumns={3}
-                    scrollEnabled={false}
-                    contentContainerStyle={styles.photosGrid}
-                  />
+              {/* Gender */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Gender *</Text>
+                <View style={styles.genderContainer}>
+                  {genderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.genderOption,
+                        formData.gender === option.value && styles.genderOptionSelected
+                      ]}
+                      onPress={() => handleInputChange('gender', option.value)}
+                    >
+                      <Text style={[
+                        styles.genderOptionText,
+                        formData.gender === option.value && styles.genderOptionTextSelected
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
                 </View>
-              )}
-            </View>
+              </View>
 
-            {/* Save Button */}
-            <TouchableOpacity
-              style={[styles.saveButton, isLoading && styles.buttonDisabled]}
-              onPress={handleSave}
-              disabled={isLoading}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.saveButtonText}>Save Changes</Text>
-              )}
-            </TouchableOpacity>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>I'm seeking *</Text>
+                <View style={styles.genderContainer}>
+                  {seekingGenderOptions.map((option) => (
+                    <TouchableOpacity
+                      key={option.value}
+                      style={[
+                        styles.genderOption,
+                        formData.seeking_gender === option.value && styles.genderOptionSelected
+                      ]}
+                      onPress={() => handleInputChange('seeking_gender', option.value)}
+                    >
+                      <Text style={[
+                        styles.genderOptionText,
+                        formData.seeking_gender === option.value && styles.genderOptionTextSelected
+                      ]}>
+                        {option.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Bio */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Bio</Text>
+                <TextInput
+                  style={[styles.input, styles.textArea]}
+                  value={formData.bio}
+                  onChangeText={(value) => handleInputChange('bio', value)}
+                  placeholder="Tell us about yourself..."
+                  multiline
+                  numberOfLines={4}
+                  textAlignVertical="top"
+                />
+              </View>
+
+              {/* Location Update Button */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Location</Text>
+                <TouchableOpacity
+                  style={[styles.locationButton, isUpdatingLocation && styles.buttonDisabled]}
+                  onPress={handleUpdateLocation}
+                  disabled={isUpdatingLocation}
+                >
+                  {isUpdatingLocation ? (
+                    <ActivityIndicator color="#fff" size="small" />
+                  ) : (
+                    <Text style={styles.locationButtonText}>📍 Update My Location</Text>
+                  )}
+                </TouchableOpacity>
+                {user?.location_latitude && user?.location_longitude && (
+                  <Text style={styles.locationInfo}>
+                    Current: {user.location_latitude.toFixed(4)}, {user.location_longitude.toFixed(4)}
+                  </Text>
+                )}
+              </View>
+
+              {/* Photos */}
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Photos</Text>
+                <TouchableOpacity
+                  style={[styles.addPhotoButton, isUploadingPhotos && styles.buttonDisabled]}
+                  onPress={pickImage}
+                  disabled={isUploadingPhotos}
+                >
+                  {isUploadingPhotos ? (
+                    <ActivityIndicator color="#007AFF" />
+                  ) : (
+                    <Text style={styles.addPhotoButtonText}>➕ Add Photos</Text>
+                  )}
+                </TouchableOpacity>
+                {photos.length > 0 && (
+                  <View style={styles.photosContainer}>
+                    <FlatList
+                      data={photos}
+                      renderItem={renderPhoto}
+                      keyExtractor={(item, index) => `${item}-${index}`}
+                      numColumns={3}
+                      scrollEnabled={false}
+                      contentContainerStyle={styles.photosGrid}
+                    />
+                  </View>
+                )}
+              </View>
+
+              {/* Save Button */}
+              <TouchableOpacity
+                style={[styles.saveButton, isLoading && styles.buttonDisabled]}
+                onPress={handleSave}
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flexGrow: 1,
@@ -453,6 +455,11 @@ const styles = StyleSheet.create({
   },
   form: {
     width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    padding: 20,
   },
   inputContainer: {
     marginBottom: 24,
@@ -460,18 +467,18 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.2)',
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     fontSize: 16,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
   },
   textArea: {
     height: 100,
@@ -483,9 +490,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   genderOption: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.18)',
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 8,
     paddingHorizontal: 16,
     paddingVertical: 10,
@@ -493,19 +500,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   genderOptionSelected: {
-    backgroundColor: '#007AFF',
-    borderColor: '#007AFF',
+    backgroundColor: 'rgba(0,122,255,0.85)',
+    borderColor: 'rgba(255,255,255,0.3)',
   },
   genderOptionText: {
     fontSize: 14,
-    color: '#1a1a1a',
+    color: '#FFFFFF',
     fontWeight: '500',
   },
   genderOptionTextSelected: {
     color: '#fff',
   },
   locationButton: {
-    backgroundColor: '#34C759',
+    backgroundColor: 'rgba(52,199,89,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -517,20 +526,20 @@ const styles = StyleSheet.create({
   },
   locationInfo: {
     fontSize: 12,
-    color: '#666',
+    color: 'rgba(255,255,255,0.8)',
     marginTop: 8,
   },
   addPhotoButton: {
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     borderWidth: 1,
-    borderColor: '#e1e5e9',
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
     marginBottom: 12,
   },
   addPhotoButtonText: {
-    color: '#007AFF',
+    color: '#FFFFFF',
     fontSize: 16,
     fontWeight: '600',
   },
@@ -550,7 +559,9 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: 8,
-    backgroundColor: '#f0f0f0',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    backgroundColor: 'rgba(255,255,255,0.2)',
   },
   removePhotoButton: {
     position: 'absolute',
@@ -569,7 +580,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   saveButton: {
-    backgroundColor: '#007AFF',
+    backgroundColor: 'rgba(0,122,255,0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
     borderRadius: 12,
     paddingVertical: 16,
     alignItems: 'center',

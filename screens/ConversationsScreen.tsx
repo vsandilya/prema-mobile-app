@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
+import GradientBackground from '../components/GradientBackground';
 
 interface ConversationSummary {
   user_id: number;
@@ -124,55 +125,58 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#007AFF" />
-          <Text style={styles.loadingText}>Loading conversations...</Text>
-        </View>
-      </SafeAreaView>
+      <GradientBackground>
+        <SafeAreaView style={styles.container}>
+          <View style={styles.loadingContainer}>
+            <ActivityIndicator size="large" color="#007AFF" />
+            <Text style={styles.loadingText}>Loading conversations...</Text>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Messages</Text>
-        <View style={styles.placeholder} />
-      </View>
-
-      {conversations.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>💬</Text>
-          <Text style={styles.emptyTitle}>No Conversations</Text>
-          <Text style={styles.emptySubtitle}>
-            Start chatting with someone to see your conversations here.
-          </Text>
+    <GradientBackground>
+      <SafeAreaView style={styles.container}>
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+          >
+            <Text style={styles.backButtonText}>← Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.title}>Messages</Text>
+          <View style={styles.placeholder} />
         </View>
-      ) : (
-        <FlatList
-          data={conversations}
-          renderItem={renderConversation}
-          keyExtractor={(item) => item.user_id.toString()}
-          refreshControl={
-            <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
-          }
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-    </SafeAreaView>
+
+        {conversations.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>💬</Text>
+            <Text style={styles.emptyTitle}>No Conversations</Text>
+            <Text style={styles.emptySubtitle}>
+              Start chatting with someone to see your conversations here.
+            </Text>
+          </View>
+        ) : (
+          <FlatList
+            data={conversations}
+            renderItem={renderConversation}
+            keyExtractor={(item) => item.user_id.toString()}
+            refreshControl={
+              <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+            }
+            contentContainerStyle={styles.listContainer}
+          />
+        )}
+      </SafeAreaView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   header: {
     flexDirection: 'row',
@@ -180,9 +184,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e1e5e9',
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   backButton: {
     paddingVertical: 8,
@@ -193,9 +197,9 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontSize: 22,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   placeholder: {
     width: 60,
@@ -206,43 +210,50 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    marginTop: 10,
+    marginTop: 12,
     fontSize: 16,
-    color: '#666',
+    color: '#FFFFFF',
   },
   emptyContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 40,
+    padding: 40,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    margin: 24,
+    borderRadius: 24,
   },
   emptyIcon: {
-    fontSize: 64,
+    fontSize: 60,
     marginBottom: 16,
+    color: '#FFFFFF',
   },
   emptyTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+    fontWeight: '700',
+    color: '#FFFFFF',
     marginBottom: 8,
   },
   emptySubtitle: {
     fontSize: 16,
-    color: '#666',
+    color: 'rgba(255,255,255,0.85)',
     textAlign: 'center',
-    lineHeight: 24,
   },
   listContainer: {
+    backgroundColor: 'rgba(255,255,255,0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    margin: 16,
     paddingVertical: 8,
   },
   conversationItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    paddingHorizontal: 16,
+    paddingVertical: 18,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
   },
   avatarContainer: {
     position: 'relative',
@@ -262,21 +273,15 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   unreadBadge: {
-    position: 'absolute',
-    top: -2,
-    right: -2,
-    backgroundColor: '#FF3B30',
-    borderRadius: 10,
-    minWidth: 20,
-    height: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 6,
+    backgroundColor: 'rgba(255,107,107,0.85)',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
   },
   unreadBadgeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '700',
   },
   conversationContent: {
     flex: 1,

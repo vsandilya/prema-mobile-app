@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
+import GradientBackground from '../components/GradientBackground';
 
 interface ResetPasswordScreenProps {
   navigation: any;
@@ -87,84 +88,85 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.content}>
-          <Text style={styles.title}>Reset Password</Text>
-          <Text style={styles.subtitle}>
-            Enter your new password below.
-          </Text>
+    <GradientBackground>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      >
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          <View style={styles.content}>
+            <Text style={styles.title}>Reset Password</Text>
+            <Text style={styles.subtitle}>
+              Enter your new password below.
+            </Text>
 
-          {!resetToken && (
-            <View style={styles.warningContainer}>
-              <Text style={styles.warningText}>
-                ⚠️ No reset token provided. This screen will be accessible via reset link.
-              </Text>
+            {!resetToken && (
+              <View style={styles.warningContainer}>
+                <Text style={styles.warningText}>
+                  ⚠️ No reset token provided. This screen will be accessible via reset link.
+                </Text>
+              </View>
+            )}
+
+            <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>New Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter your new password"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  editable={!!resetToken && !isLoading}
+                />
+              </View>
+
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Confirm Password *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  placeholder="Confirm your new password"
+                  secureTextEntry
+                  autoCapitalize="none"
+                  editable={!!resetToken && !isLoading}
+                />
+              </View>
+
+              <TouchableOpacity
+                style={[
+                  styles.button,
+                  (isLoading || !resetToken) && styles.buttonDisabled,
+                ]}
+                onPress={handleResetPassword}
+                disabled={isLoading || !resetToken}
+              >
+                {isLoading ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <Text style={styles.buttonText}>Reset Password</Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.backLink}
+                onPress={() => navigation.navigate('Login')}
+              >
+                <Text style={styles.backLinkText}>← Back to Login</Text>
+              </TouchableOpacity>
             </View>
-          )}
-
-          <View style={styles.form}>
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>New Password *</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter your new password"
-                secureTextEntry
-                autoCapitalize="none"
-                editable={!!resetToken && !isLoading}
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <Text style={styles.label}>Confirm Password *</Text>
-              <TextInput
-                style={styles.input}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                placeholder="Confirm your new password"
-                secureTextEntry
-                autoCapitalize="none"
-                editable={!!resetToken && !isLoading}
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[
-                styles.button,
-                (isLoading || !resetToken) && styles.buttonDisabled,
-              ]}
-              onPress={handleResetPassword}
-              disabled={isLoading || !resetToken}
-            >
-              {isLoading ? (
-                <ActivityIndicator color="#fff" />
-              ) : (
-                <Text style={styles.buttonText}>Reset Password</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.backLink}
-              onPress={() => navigation.navigate('Login')}
-            >
-              <Text style={styles.backLinkText}>← Back to Login</Text>
-            </TouchableOpacity>
           </View>
-        </View>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </GradientBackground>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f8f9fa',
   },
   scrollContainer: {
     flexGrow: 1,
