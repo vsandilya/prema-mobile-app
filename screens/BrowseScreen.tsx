@@ -42,7 +42,7 @@ const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const photoWidth = screenWidth - 40; // Account for horizontal margins on card
 
 const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
-  const { browseUsers, likeUser, passUser, logout, getUsersWhoLikedMe } = useAuth();
+  const { browseUsers, likeUser, passUser, getUsersWhoLikedMe } = useAuth();
   const { initializeLocation } = useLocationAutoUpdate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -249,21 +249,6 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     }
   };
 
-  const handleLogout = () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Logout', 
-          style: 'destructive',
-          onPress: logout
-        },
-      ]
-    );
-  };
-
   const moveToNextUser = () => {
     setCurrentIndex(prev => prev + 1);
     
@@ -436,12 +421,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     <GradientBackground>
       <SafeAreaView style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.logoutButton}
-          onPress={handleLogout}
-        >
-          <Text style={styles.logoutButtonText}>⏻</Text>
-        </TouchableOpacity>
+        <View style={styles.headerLeft} />
         <View style={styles.headerCenter}>
           <TouchableOpacity
             style={styles.headerIconButton}
@@ -581,15 +561,8 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.15)',
   },
-  logoutButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  logoutButtonText: {
-    fontSize: 24,
-    color: '#FF3B30',
+  headerLeft: {
+    width: 40,
   },
   headerCenter: {
     flexDirection: 'row',
@@ -607,6 +580,10 @@ const styles = StyleSheet.create({
   headerIconText: {
     fontSize: 24,
   },
+  headerIconTextBrowse: {
+    fontSize: 24,
+    color: '#5AC8FA',
+  },
   headerIconTextMessages: {
     fontSize: 24,
     color: '#007AFF',
@@ -622,6 +599,9 @@ const styles = StyleSheet.create({
   headerIconTextProfile: {
     fontSize: 24,
     color: '#9B59B6',
+  },
+  headerIconActive: {
+    opacity: 0.6,
   },
   headerIconWithBadge: {
     position: 'relative',

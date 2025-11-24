@@ -34,10 +34,20 @@ const { width: screenWidth } = Dimensions.get('window');
 const cardWidth = (screenWidth - 60) / 2; // 2 columns with margins
 
 const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
-  const { getMatches, unmatchUser } = useAuth();
+  const { getMatches, unmatchUser, getUsersWhoLikedMe } = useAuth();
   const [matches, setMatches] = useState<MatchResponse[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [likesCount, setLikesCount] = useState(0);
+
+  const loadLikesCount = async () => {
+    try {
+      const likes = await getUsersWhoLikedMe();
+      setLikesCount(likes.length);
+    } catch (error) {
+      console.error('Error loading likes count:', error);
+    }
+  };
 
   const loadMatches = async () => {
     try {
@@ -62,6 +72,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     useCallback(() => {
       setIsLoading(true);
       loadMatches();
+      loadLikesCount();
     }, [])
   );
 
@@ -179,14 +190,46 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
     <GradientBackground>
       <SafeAreaView style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Text style={styles.backButtonText}>← Back</Text>
-          </TouchableOpacity>
-          <Text style={styles.title}>Matches</Text>
-          <View style={styles.placeholder} />
+          <View style={styles.headerLeft} />
+          <View style={styles.headerCenter}>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Browse')}
+            >
+              <Text style={styles.headerIconTextBrowse}>👓</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Conversations')}
+            >
+              <Text style={styles.headerIconTextMessages}>💬</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => {
+                navigation.navigate('Likes');
+                loadLikesCount();
+              }}
+            >
+              <View style={styles.headerIconWithBadge}>
+                <Text style={styles.headerIconTextLikes}>🔥</Text>
+                {likesCount > 0 && (
+                  <View style={styles.badge}>
+                    <Text style={styles.badgeText}>
+                      {likesCount > 99 ? '99+' : likesCount}
+                    </Text>
+                  </View>
+                )}
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.headerIconButton}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              <Text style={styles.headerIconTextProfile}>👤</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.headerRight} />
         </View>
 
         {matches.length === 0 ? (
@@ -235,21 +278,66 @@ const styles = StyleSheet.create({
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: 'rgba(255,255,255,0.15)',
   },
-  backButton: {
+  headerLeft: {
+    width: 40,
+  },
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flex: 1,
+  },
+  headerRight: {
+    width: 40,
+  },
+  headerIconButton: {
     paddingVertical: 8,
+    paddingHorizontal: 12,
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#FF6B6B',
-    fontWeight: '500',
+  headerIconTextBrowse: {
+    fontSize: 24,
+    color: '#5AC8FA',
   },
-  title: {
-    fontSize: 22,
-    fontWeight: '700',
+  headerIconTextMessages: {
+    fontSize: 24,
+    color: '#007AFF',
+  },
+  headerIconTextLikes: {
+    fontSize: 24,
+    color: '#FF9500',
+  },
+  headerIconTextMatches: {
+    fontSize: 24,
+    color: '#FF2D87',
+  },
+  headerIconTextProfile: {
+    fontSize: 24,
+    color: '#9B59B6',
+  },
+  headerIconActive: {
+    opacity: 0.6,
+  },
+  headerIconWithBadge: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
     color: '#FFFFFF',
-  },
-  placeholder: {
-    width: 60,
+    fontSize: 11,
+    fontWeight: '700',
   },
   loadingContainer: {
     flex: 1,

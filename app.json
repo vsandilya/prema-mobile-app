@@ -12,7 +12,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.vsandilya.mobileapp",
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Prema needs camera access to take photos for your profile",
+        "NSMicrophoneUsageDescription": "Prema needs microphone access for voice messages"
       }
     },
     "android": {

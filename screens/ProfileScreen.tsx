@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   Alert,
   FlatList,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
@@ -19,7 +20,38 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user } = useAuth();
+  const { user, logout, getUsersWhoLikedMe } = useAuth();
+  const [likesCount, setLikesCount] = useState(0);
+
+  const loadLikesCount = async () => {
+    try {
+      const likes = await getUsersWhoLikedMe();
+      setLikesCount(likes.length);
+    } catch (error) {
+      console.error('Error loading likes count:', error);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadLikesCount();
+    }, [])
+  );
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive',
+          onPress: logout
+        },
+      ]
+    );
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -61,19 +93,52 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         <ScrollView>
           <View style={styles.content}>
             <View style={styles.header}>
-              <TouchableOpacity
-                style={styles.backButton}
-                onPress={() => navigation.navigate('Browse')}
-              >
-                <Text style={styles.backButtonText}>← Back</Text>
-              </TouchableOpacity>
-              <Text style={styles.title}>My Profile</Text>
-              <TouchableOpacity
-                style={styles.editButton}
-                onPress={() => navigation.navigate('EditProfile')}
-              >
-                <Text style={styles.editButtonText}>✏️</Text>
-              </TouchableOpacity>
+              <View style={styles.headerLeft} />
+              <View style={styles.headerCenter}>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('Browse')}
+                >
+                  <Text style={styles.headerIconTextBrowse}>👓</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('Conversations')}
+                >
+                  <Text style={styles.headerIconTextMessages}>💬</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => {
+                    navigation.navigate('Likes');
+                    loadLikesCount();
+                  }}
+                >
+                  <View style={styles.headerIconWithBadge}>
+                    <Text style={styles.headerIconTextLikes}>🔥</Text>
+                    {likesCount > 0 && (
+                      <View style={styles.badge}>
+                        <Text style={styles.badgeText}>
+                          {likesCount > 99 ? '99+' : likesCount}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('Matches')}
+                >
+                  <Text style={styles.headerIconTextMatches}>💞</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('EditProfile')}
+                >
+                  <Text style={styles.headerIconTextEdit}>✏️</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.headerRight} />
             </View>
 
             <View style={styles.profileCard}>
@@ -144,6 +209,13 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               </View>
             </View>
 
+            <TouchableOpacity
+              style={styles.logoutButton}
+              onPress={handleLogout}
+            >
+              <Text style={styles.logoutButtonText}>Logout</Text>
+            </TouchableOpacity>
+
           </View>
         </ScrollView>
       </SafeAreaView>
@@ -160,33 +232,79 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: 'rgba(255,255,255,0.15)',
     marginBottom: 20,
   },
-  backButton: {
-    paddingVertical: 8,
-    paddingRight: 8,
+  headerLeft: {
+    width: 40,
   },
-  backButtonText: {
-    fontSize: 16,
-    color: '#FF6B6B',
-    fontWeight: '500',
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#1a1a1a',
+  headerCenter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
-    textAlign: 'center',
   },
-  editButton: {
+  headerRight: {
+    width: 40,
+  },
+  headerIconButton: {
     paddingVertical: 8,
     paddingHorizontal: 12,
-    borderRadius: 8,
   },
-  editButtonText: {
+  headerIconTextBrowse: {
     fontSize: 24,
+    color: '#5AC8FA',
+  },
+  headerIconTextMessages: {
+    fontSize: 24,
+    color: '#007AFF',
+  },
+  headerIconTextLikes: {
+    fontSize: 24,
+    color: '#FF9500',
+  },
+  headerIconTextMatches: {
+    fontSize: 24,
+    color: '#FF2D87',
+  },
+  headerIconTextProfile: {
+    fontSize: 24,
+    color: '#9B59B6',
+  },
+  headerIconTextEdit: {
+    fontSize: 24,
+    color: '#FFFFFF',
+  },
+  headerIconActive: {
+    opacity: 0.6,
+  },
+  headerIconWithBadge: {
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: -6,
+    right: -8,
+    backgroundColor: '#FF3B30',
+    borderRadius: 10,
+    minWidth: 20,
+    height: 20,
+    paddingHorizontal: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+  },
+  badgeText: {
+    color: '#FFFFFF',
+    fontSize: 11,
+    fontWeight: '700',
   },
   profileCard: {
     backgroundColor: '#fff',
@@ -298,6 +416,23 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     textAlign: 'center',
     marginTop: 50,
+  },
+  logoutButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    marginTop: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  logoutButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
   },
 });
 

@@ -120,6 +120,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
     }
   };
 
+
   const formatTimestamp = (timestamp: string) => {
     const date = new Date(timestamp);
     const now = new Date();
@@ -184,7 +185,6 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>{userName}</Text>
-        <View style={styles.placeholder} />
       </View>
 
       <KeyboardAvoidingView 
@@ -263,9 +263,8 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#1a1a1a',
-  },
-  placeholder: {
-    width: 60,
+    flex: 1,
+    textAlign: 'center',
   },
   loadingContainer: {
     flex: 1,
