@@ -8,10 +8,10 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
   Image,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
@@ -176,7 +176,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   if (isLoading) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#FF6B6B" />
             <Text style={styles.loadingText}>Loading your matches...</Text>
@@ -188,7 +188,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.headerLeft} />
           <View style={styles.headerCenter}>
@@ -237,7 +237,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             <Text style={styles.emptyIcon}>💔</Text>
             <Text style={styles.emptyTitle}>No Matches Yet</Text>
             <Text style={styles.emptySubtitle}>
-              Start browsing to find people who like you back!
+              Start browsing, people want to know you
             </Text>
             <TouchableOpacity
               style={styles.browseButton}

@@ -3,13 +3,13 @@ import {
   Alert,
   FlatList,
   Image,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import GradientBackground from '../components/GradientBackground';
@@ -80,7 +80,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   if (!user) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
           <Text style={styles.errorText}>No user data available</Text>
         </SafeAreaView>
       </GradientBackground>
@@ -89,7 +89,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <ScrollView>
           <View style={styles.content}>
             <View style={styles.header}>

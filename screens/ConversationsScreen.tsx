@@ -8,8 +8,8 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import GradientBackground from '../components/GradientBackground';
@@ -137,7 +137,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
   if (isLoading) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#007AFF" />
             <Text style={styles.loadingText}>Loading conversations...</Text>
@@ -149,7 +149,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.headerLeft} />
           <View style={styles.headerCenter}>

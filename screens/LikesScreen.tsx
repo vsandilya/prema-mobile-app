@@ -7,12 +7,12 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   Image,
   Dimensions,
   ScrollView,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
@@ -274,7 +274,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
   if (isLoading) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
           <View style={styles.header}>
             <TouchableOpacity
               style={styles.backButton}
@@ -296,7 +296,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
         <View style={styles.header}>
           <View style={styles.headerLeft} />
           <View style={styles.headerCenter}>
@@ -333,7 +333,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
             <Text style={styles.emptyIcon}>💔</Text>
             <Text style={styles.emptyTitle}>No one has liked you yet</Text>
             <Text style={styles.emptySubtitle}>
-              Start browsing to find people who might like you!
+              Start browsing, you may be surprised how many people are into you
             </Text>
             <TouchableOpacity
               style={styles.browseButton}

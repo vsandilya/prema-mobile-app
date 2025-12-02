@@ -8,13 +8,13 @@ import {
   Dimensions,
   Image,
   Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import RangeSlider from 'rn-range-slider';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
@@ -405,7 +405,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   if (isLoading) {
     return (
       <GradientBackground>
-        <SafeAreaView style={styles.container}>
+        <SafeAreaView style={styles.container} edges={['top']}>
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#FF6B6B" />
             <Text style={styles.loadingText}>Finding people near you...</Text>
@@ -419,7 +419,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
 
   return (
     <GradientBackground>
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
         <View style={styles.headerLeft} />
         <View style={styles.headerCenter}>
