@@ -196,9 +196,8 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
         {conversations.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💬</Text>
-            <Text style={styles.emptyTitle}>No Conversations</Text>
             <Text style={styles.emptySubtitle}>
-              Start chatting with someone to see your conversations here.
+              say something nice to one of your matches and see the universe reflect that back on you
             </Text>
           </View>
         ) : (

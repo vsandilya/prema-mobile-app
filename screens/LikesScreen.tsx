@@ -331,7 +331,6 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
         {users.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💔</Text>
-            <Text style={styles.emptyTitle}>No one has liked you yet</Text>
             <Text style={styles.emptySubtitle}>
               Start browsing, you may be surprised how many people are into you
             </Text>

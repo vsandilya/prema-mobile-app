@@ -235,7 +235,6 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         {matches.length === 0 ? (
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>💔</Text>
-            <Text style={styles.emptyTitle}>No Matches Yet</Text>
             <Text style={styles.emptySubtitle}>
               Start browsing, people want to know you
             </Text>
