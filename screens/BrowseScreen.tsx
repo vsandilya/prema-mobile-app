@@ -278,7 +278,11 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     const photos = user.photos && user.photos.length > 0 ? user.photos : [];
 
     return (
-      <View style={styles.userCard}>
+      <TouchableOpacity
+        style={styles.userCard}
+        onPress={() => navigation.navigate('ProfileView', { user })}
+        activeOpacity={0.9}
+      >
         <View style={styles.photoContainer}>
           {photos.length > 0 ? (
             <ScrollView
@@ -310,16 +314,6 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
             </View>
           )}
 
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userAge}>{user.age} years old</Text>
-            {formatDistance(user.distance_km) && (
-              <Text style={styles.userDistance}>
-                📍 {formatDistance(user.distance_km)}
-              </Text>
-            )}
-          </View>
-
           {photos.length > 1 && (
             <View style={styles.photoPaginationContainer} pointerEvents="none">
               {photos.map((_, idx) => (
@@ -335,16 +329,29 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           )}
         </View>
 
-        {user.bio && (
-          <View style={styles.bioContainer}>
-            <Text style={styles.bioText}>{user.bio}</Text>
-          </View>
-        )}
+        {/* User info below photo */}
+        <View style={styles.userInfoContainer}>
+          <Text style={styles.userName}>{user.name}</Text>
+          <Text style={styles.userAge}>{user.age} years old</Text>
+          {formatDistance(user.distance_km) && (
+            <Text style={styles.userDistance}>
+              📍 {formatDistance(user.distance_km)}
+            </Text>
+          )}
+          {user.bio && (
+            <Text style={styles.bioPreview} numberOfLines={2}>
+              {user.bio}
+            </Text>
+          )}
+        </View>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[styles.passButton, isInteracting && styles.buttonDisabled]}
-            onPress={() => handlePass(user)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handlePass(user);
+            }}
             disabled={isInteracting}
           >
             <Text style={styles.passButtonText}>✕</Text>
@@ -352,13 +359,16 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
 
           <TouchableOpacity
             style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
-            onPress={() => handleLike(user)}
+            onPress={(e) => {
+              e.stopPropagation();
+              handleLike(user);
+            }}
             disabled={isInteracting}
           >
             <Text style={styles.likeButtonText}>❤️</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -676,28 +686,32 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  userInfo: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+  userInfoContainer: {
+    backgroundColor: 'rgba(255,255,255,0.95)',
     padding: 20,
+    paddingTop: 15,
   },
   userName: {
-    fontSize: 28,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#fff',
+    color: '#1a1a1a',
     marginBottom: 4,
   },
   userAge: {
-    fontSize: 18,
-    color: '#fff',
+    fontSize: 16,
+    color: '#666',
     marginBottom: 4,
   },
   userDistance: {
     fontSize: 14,
-    color: '#fff',
+    color: '#666',
+    marginBottom: 8,
+  },
+  bioPreview: {
+    fontSize: 14,
+    color: '#333',
+    lineHeight: 20,
+    marginTop: 4,
   },
   bioContainer: {
     padding: 20,

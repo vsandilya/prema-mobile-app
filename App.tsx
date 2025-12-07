@@ -17,6 +17,7 @@ import ChatScreen from './screens/ChatScreen';
 import BrowseScreen from './screens/BrowseScreen';
 import MatchesScreen from './screens/MatchesScreen';
 import LikesScreen from './screens/LikesScreen';
+import ProfileViewScreen from './screens/ProfileViewScreen';
 import { setupNotificationListeners, getNotificationData } from './utils/notifications';
 import { navigationRef } from './utils/navigation';
 
@@ -101,6 +102,14 @@ function AppStack() {
         component={LikesScreen}
         options={{
           headerShown: false,
+        }}
+      />
+      <Stack.Screen 
+        name="ProfileView" 
+        component={ProfileViewScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
         }}
       />
     </Stack.Navigator>
