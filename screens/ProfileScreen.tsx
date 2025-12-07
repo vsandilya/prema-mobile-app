@@ -90,7 +90,10 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   return (
     <GradientBackground>
       <SafeAreaView style={styles.container} edges={['top']}>
-        <ScrollView>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+        >
           <View style={styles.content}>
             <View style={styles.header}>
               <View style={styles.headerLeft} />
@@ -226,6 +229,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollView: {
+    flex: 1,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    borderColor: 'transparent',
+  },
+  scrollContent: {
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
   },
   content: {
     padding: 20,
