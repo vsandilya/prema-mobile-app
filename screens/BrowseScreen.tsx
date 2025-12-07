@@ -117,10 +117,10 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     }
   };
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setIsLoading(true);
-      const params: any = { limit: 20 }; // Increased limit to get more users initially
+      const params: any = { limit: 20, skip: 0 }; // Always start from beginning, no skip
       
       // Only apply filters if they're not at default values
       // This ensures we get all compatible users on initial load
@@ -135,24 +135,27 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         params.max_age = Math.round(maxAge);
       }
       
-      console.log('[BrowseScreen] ===== LOADING USERS =====');
-      console.log('[BrowseScreen] Current filter state:', {
+      const callId = Date.now();
+      console.log(`[BrowseScreen] ===== LOADING USERS (Call ID: ${callId}) =====`);
+      console.log(`[BrowseScreen] Current filter state:`, {
         maxDistance,
         minAge,
         maxAge,
         filtersLoaded: filtersLoadedRef.current,
         initialLoadDone: initialLoadDoneRef.current,
+        existingUsersCount: users.length,
       });
-      console.log('[BrowseScreen] API params being sent:', JSON.stringify(params, null, 2));
+      console.log(`[BrowseScreen] API params being sent:`, JSON.stringify(params, null, 2));
       const response = await browseUsers(params);
-      console.log('[BrowseScreen] API response:', {
+      console.log(`[BrowseScreen] API response (Call ID: ${callId}):`, {
         total: response.total,
         skip: response.skip,
         limit: response.limit,
         usersCount: response.users.length,
         userNames: response.users.map(u => `${u.name} (ID: ${u.id}, Distance: ${u.distance_km}km)`),
       });
-      console.log('[BrowseScreen] ===== END LOADING =====');
+      console.log(`[BrowseScreen] Previous users count: ${users.length}, New users count: ${response.users.length}`);
+      console.log(`[BrowseScreen] ===== END LOADING (Call ID: ${callId}) =====`);
       setUsers(response.users);
       setCurrentIndex(0);
       // Don't save filters here - only save when user explicitly changes them
@@ -162,22 +165,35 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [maxDistance, minAge, maxAge, browseUsers]); // Include filter dependencies (not users.length to avoid circular dependency)
 
   // Load likes count
-  const loadLikesCount = async () => {
+  const loadLikesCount = useCallback(async () => {
     try {
       const likes = await getUsersWhoLikedMe();
       setLikesCount(likes.length);
     } catch (error) {
       console.error('Error loading likes count:', error);
     }
-  };
+  }, [getUsersWhoLikedMe]);
 
   // Load users and update location when screen focuses
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
+        const isInitialLoad = !initialLoadDoneRef.current;
+        console.log('[BrowseScreen] ===== FOCUS EFFECT TRIGGERED =====');
+        console.log('[BrowseScreen] Is initial load:', isInitialLoad);
+        console.log('[BrowseScreen] Current state:', {
+          usersCount: users.length,
+          currentIndex,
+          maxDistance,
+          minAge,
+          maxAge,
+          filtersLoaded: filtersLoadedRef.current,
+          initialLoadDone: initialLoadDoneRef.current,
+        });
+        
         // Wait for filters to be loaded from AsyncStorage first
         // This ensures we use the correct filter values on initial load
         let attempts = 0;
@@ -190,18 +206,24 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         await new Promise(resolve => setTimeout(resolve, 100));
         
         // Update location first to ensure fresh distance calculations
-        const locationUpdated = await initializeLocation();
-        if (locationUpdated) {
-          // Wait a bit for location to persist to backend
-          await new Promise(resolve => setTimeout(resolve, 300));
+        // Only update location on initial load to avoid changing results on navigation
+        if (isInitialLoad) {
+          const locationUpdated = await initializeLocation();
+          if (locationUpdated) {
+            // Wait a bit for location to persist to backend
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
         }
-        loadUsers();
+        
+        // Always reload users to ensure consistency with current filter values
+        // This ensures we get the same results with the same parameters
+        await loadUsers();
         loadLikesCount();
         // Mark initial load as done
         initialLoadDoneRef.current = true;
       };
       loadData();
-    }, [maxDistance, minAge, maxAge]) // Include filter dependencies so callback updates when filters change
+    }, [maxDistance, minAge, maxAge, loadUsers, loadLikesCount]) // Only include filter dependencies to avoid unnecessary recreations
   );
 
   // Reload users when filters change (debounced)
