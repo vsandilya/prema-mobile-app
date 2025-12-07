@@ -219,7 +219,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             onPress={handlePass}
             disabled={isInteracting}
           >
-            <Text style={styles.passButtonText}>✕ Pass</Text>
+            <Text style={styles.passButtonText}>✕</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -227,7 +227,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             onPress={handleLike}
             disabled={isInteracting}
           >
-            <Text style={styles.likeButtonText}>❤️ Like</Text>
+            <Text style={styles.likeButtonText}>❤️</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>

@@ -59,6 +59,7 @@ const GradientBackground: React.FC<GradientBackgroundProps> = ({ children }) => 
                 left: heart.left,
                 fontSize: heart.size,
                 transform: [{ translateY: animatedValues[index] }],
+                opacity: 0.15,
               },
             ]}
           >
