@@ -120,8 +120,10 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   const loadUsers = async () => {
     try {
       setIsLoading(true);
-      const params: any = { limit: 10 };
+      const params: any = { limit: 20 }; // Increased limit to get more users initially
       
+      // Only apply filters if they're not at default values
+      // This ensures we get all compatible users on initial load
       if (maxDistance && maxDistance < 125) {
         // Convert miles to km for API: km = miles / 0.621371
         params.max_distance = Math.round(maxDistance / 0.621371);
@@ -133,7 +135,9 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         params.max_age = Math.round(maxAge);
       }
       
+      console.log('[BrowseScreen] Loading users with params:', params);
       const response = await browseUsers(params);
+      console.log('[BrowseScreen] Received users:', response.users.length, response.users.map(u => u.name));
       setUsers(response.users);
       setCurrentIndex(0);
       // Don't save filters here - only save when user explicitly changes them
@@ -159,6 +163,17 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   useFocusEffect(
     useCallback(() => {
       const loadData = async () => {
+        // Wait for filters to be loaded from AsyncStorage first
+        // This ensures we use the correct filter values on initial load
+        let attempts = 0;
+        while (!filtersLoadedRef.current && attempts < 50) {
+          await new Promise(resolve => setTimeout(resolve, 50));
+          attempts++;
+        }
+        
+        // Wait a bit more for state to update after filters are loaded
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
         // Update location first to ensure fresh distance calculations
         const locationUpdated = await initializeLocation();
         if (locationUpdated) {
@@ -171,7 +186,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         initialLoadDoneRef.current = true;
       };
       loadData();
-    }, [])
+    }, [maxDistance, minAge, maxAge]) // Include filter dependencies so callback updates when filters change
   );
 
   // Reload users when filters change (debounced)
