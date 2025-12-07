@@ -344,30 +344,6 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
             </Text>
           )}
         </View>
-
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.passButton, isInteracting && styles.buttonDisabled]}
-            onPress={(e) => {
-              e.stopPropagation();
-              handlePass(user);
-            }}
-            disabled={isInteracting}
-          >
-            <Text style={styles.passButtonText}>✕</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
-            onPress={(e) => {
-              e.stopPropagation();
-              handleLike(user);
-            }}
-            disabled={isInteracting}
-          >
-            <Text style={styles.likeButtonText}>❤️</Text>
-          </TouchableOpacity>
-        </View>
       </TouchableOpacity>
     );
   };
@@ -540,7 +516,11 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         )}
       </View>
 
-      <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        style={styles.content} 
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {users.length === 0 ? (
           <View style={styles.noMatchesContainer}>
             <Text style={styles.noMatchesText}>😔 No matches found</Text>
@@ -550,6 +530,27 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           currentUser && renderUserCard(currentUser)
         )}
       </ScrollView>
+
+      {/* Fixed action buttons at bottom */}
+      {currentUser && (
+        <View style={styles.actionButtons}>
+          <TouchableOpacity
+            style={[styles.passButton, isInteracting && styles.buttonDisabled]}
+            onPress={() => handlePass(currentUser)}
+            disabled={isInteracting}
+          >
+            <Text style={styles.passButtonText}>✕</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
+            onPress={() => handleLike(currentUser)}
+            disabled={isInteracting}
+          >
+            <Text style={styles.likeButtonText}>❤️</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {renderMatchModal()}
       </SafeAreaView>
@@ -648,6 +649,9 @@ const styles = StyleSheet.create({
   content: {
     flex: 1,
   },
+  contentContainer: {
+    paddingBottom: 100, // Space for fixed buttons
+  },
   userCard: {
     margin: 20,
     backgroundColor: 'rgba(255,255,255,0.15)',
@@ -687,7 +691,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   userInfoContainer: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255, 182, 193, 0.9)',
     padding: 20,
     paddingTop: 15,
   },
@@ -724,12 +728,18 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   actionButtons: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingBottom: 30,
     backgroundColor: 'rgba(0,0,0,0.25)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.15)',
   },
   passButton: {
     backgroundColor: '#D4A574',
