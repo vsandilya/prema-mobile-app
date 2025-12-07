@@ -135,14 +135,29 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         params.max_age = Math.round(maxAge);
       }
       
-      console.log('[BrowseScreen] Loading users with params:', params);
+      console.log('[BrowseScreen] ===== LOADING USERS =====');
+      console.log('[BrowseScreen] Current filter state:', {
+        maxDistance,
+        minAge,
+        maxAge,
+        filtersLoaded: filtersLoadedRef.current,
+        initialLoadDone: initialLoadDoneRef.current,
+      });
+      console.log('[BrowseScreen] API params being sent:', JSON.stringify(params, null, 2));
       const response = await browseUsers(params);
-      console.log('[BrowseScreen] Received users:', response.users.length, response.users.map(u => u.name));
+      console.log('[BrowseScreen] API response:', {
+        total: response.total,
+        skip: response.skip,
+        limit: response.limit,
+        usersCount: response.users.length,
+        userNames: response.users.map(u => `${u.name} (ID: ${u.id}, Distance: ${u.distance_km}km)`),
+      });
+      console.log('[BrowseScreen] ===== END LOADING =====');
       setUsers(response.users);
       setCurrentIndex(0);
       // Don't save filters here - only save when user explicitly changes them
     } catch (error: any) {
-      console.error('Error loading users:', error);
+      console.error('[BrowseScreen] Error loading users:', error);
       Alert.alert('Error', error.message || 'Failed to load users');
     } finally {
       setIsLoading(false);
