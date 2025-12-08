@@ -19,9 +19,11 @@ interface User {
   age: number;
   bio?: string;
   gender: string;
+  seeking_gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
+  primary_photo?: number;
   preferences?: any;
   is_active: boolean;
   created_at: string;
@@ -56,6 +58,7 @@ interface UserProfile {
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
+  primary_photo?: number;
   distance_km?: number;
 }
 
@@ -82,6 +85,7 @@ interface MatchResponse {
   age: number;
   bio?: string;
   photos?: string[];
+  primary_photo?: number;
   matched_at: string;
 }
 

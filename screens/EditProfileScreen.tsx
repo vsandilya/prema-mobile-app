@@ -35,10 +35,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   });
 
   const [photos, setPhotos] = useState<string[]>([]);
+  const [primaryPhotoIndex, setPrimaryPhotoIndex] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdatingLocation, setIsUpdatingLocation] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [processingPhotoIds, setProcessingPhotoIds] = useState<string[]>([]);
+  const [isSettingPrimary, setIsSettingPrimary] = useState(false);
 
   const genderOptions = [
     { label: 'Male', value: 'male' },
@@ -64,6 +66,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
         seeking_gender: user.seeking_gender || 'both',
       });
       setPhotos(user.photos || []);
+      setPrimaryPhotoIndex(user.primary_photo !== undefined ? user.primary_photo : 0);
     }
   }, [user]);
 
@@ -209,12 +212,50 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
       const newPhotos = photos.filter((_, i) => i !== index);
       setPhotos(newPhotos);
 
+      // Adjust primary photo index if needed
+      if (index === primaryPhotoIndex && newPhotos.length > 0) {
+        // If we deleted the primary photo, set the first photo as primary
+        setPrimaryPhotoIndex(0);
+        await setPrimaryPhoto(0);
+      } else if (index < primaryPhotoIndex) {
+        // If we deleted a photo before the primary, adjust the index
+        setPrimaryPhotoIndex(primaryPhotoIndex - 1);
+        await setPrimaryPhoto(primaryPhotoIndex - 1);
+      }
+
       await refreshUser();
     } catch (error) {
       console.error('Error deleting photo:', error);
       Alert.alert('Error', 'Failed to delete photo. Please try again.');
     } finally {
       setProcessingPhotoIds((prev) => prev.filter((id) => id !== filename));
+    }
+  };
+
+  const setPrimaryPhoto = async (index: number) => {
+    if (index < 0 || index >= photos.length) {
+      Alert.alert('Error', 'Invalid photo index');
+      return;
+    }
+
+    setIsSettingPrimary(true);
+    try {
+      const formData = new FormData();
+      formData.append('photo_index', index.toString());
+
+      await api.put('/users/primary-photo', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+
+      setPrimaryPhotoIndex(index);
+      await refreshUser();
+    } catch (error: any) {
+      console.error('Error setting primary photo:', error);
+      Alert.alert('Error', error.response?.data?.detail || 'Failed to set primary photo. Please try again.');
+    } finally {
+      setIsSettingPrimary(false);
     }
   };
 
@@ -260,6 +301,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
   const renderPhoto = ({ item, index }: { item: string; index: number }) => {
     const imageUrl = getImageUrl(item);
+    const isPrimary = index === primaryPhotoIndex;
     return (
       <View style={styles.photoContainer}>
         <Image source={{ uri: imageUrl }} style={styles.photo} />
@@ -272,6 +314,19 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
             <ActivityIndicator color="#fff" size="small" />
           ) : (
             <Text style={styles.removePhotoButtonText}>✕</Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.primaryPhotoButton, isPrimary && styles.primaryPhotoButtonActive]}
+          onPress={() => setPrimaryPhoto(index)}
+          disabled={isSettingPrimary || processingPhotoIds.includes(item)}
+        >
+          {isSettingPrimary && index === primaryPhotoIndex ? (
+            <ActivityIndicator color="#fff" size="small" />
+          ) : (
+            <Text style={styles.primaryPhotoButtonText}>
+              {isPrimary ? '⭐' : '☆'}
+            </Text>
           )}
         </TouchableOpacity>
       </View>
@@ -578,6 +633,23 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
     fontWeight: 'bold',
+  },
+  primaryPhotoButton: {
+    position: 'absolute',
+    top: 4,
+    left: 4,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  primaryPhotoButtonActive: {
+    backgroundColor: 'rgba(255, 215, 0, 0.8)',
+  },
+  primaryPhotoButtonText: {
+    fontSize: 18,
   },
   saveButton: {
     backgroundColor: 'rgba(0,122,255,0.85)',
