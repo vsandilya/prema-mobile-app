@@ -86,23 +86,37 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   useEffect(() => {
     const loadSavedFilters = async () => {
       try {
+        console.log('[BrowseScreen] Loading filters from AsyncStorage...');
         const savedFilters = await AsyncStorage.getItem('browseFilters');
         if (savedFilters) {
           const filters = JSON.parse(savedFilters);
-          if (filters.maxDistance !== undefined) setMaxDistance(filters.maxDistance);
-          if (filters.minAge !== undefined) setMinAge(filters.minAge);
-          if (filters.maxAge !== undefined) setMaxAge(filters.maxAge);
+          console.log('[BrowseScreen] Found saved filters:', filters);
+          if (filters.maxDistance !== undefined) {
+            console.log('[BrowseScreen] Setting maxDistance from', maxDistance, 'to', filters.maxDistance);
+            setMaxDistance(filters.maxDistance);
+          }
+          if (filters.minAge !== undefined) {
+            console.log('[BrowseScreen] Setting minAge from', minAge, 'to', filters.minAge);
+            setMinAge(filters.minAge);
+          }
+          if (filters.maxAge !== undefined) {
+            console.log('[BrowseScreen] Setting maxAge from', maxAge, 'to', filters.maxAge);
+            setMaxAge(filters.maxAge);
+          }
+        } else {
+          console.log('[BrowseScreen] No saved filters found, using defaults');
         }
         // Mark filters as loaded (even if no saved data exists)
         filtersLoadedRef.current = true;
+        console.log('[BrowseScreen] Filters loaded, filtersLoadedRef set to true');
       } catch (error) {
-        console.error('Error loading filters:', error);
+        console.error('[BrowseScreen] Error loading filters:', error);
         // Mark as loaded even on error to allow future saves
         filtersLoadedRef.current = true;
       }
     };
     loadSavedFilters();
-  }, []);
+  }, []); // Empty deps - only run once on mount
 
   // Save filters when they change
   const saveFilters = async () => {
@@ -120,27 +134,57 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
   const loadUsers = useCallback(async () => {
     try {
       setIsLoading(true);
+      
+      // Read filters directly from AsyncStorage to ensure we use the latest saved values
+      // This avoids race conditions with state updates
+      let actualMaxDistance = maxDistance;
+      let actualMinAge = minAge;
+      let actualMaxAge = maxAge;
+      
+      try {
+        const savedFilters = await AsyncStorage.getItem('browseFilters');
+        if (savedFilters) {
+          const filters = JSON.parse(savedFilters);
+          if (filters.maxDistance !== undefined) actualMaxDistance = filters.maxDistance;
+          if (filters.minAge !== undefined) actualMinAge = filters.minAge;
+          if (filters.maxAge !== undefined) actualMaxAge = filters.maxAge;
+          console.log('[BrowseScreen] Using filters from AsyncStorage:', {
+            maxDistance: actualMaxDistance,
+            minAge: actualMinAge,
+            maxAge: actualMaxAge,
+          });
+        } else {
+          console.log('[BrowseScreen] No saved filters, using state values:', {
+            maxDistance: actualMaxDistance,
+            minAge: actualMinAge,
+            maxAge: actualMaxAge,
+          });
+        }
+      } catch (error) {
+        console.warn('[BrowseScreen] Error reading filters from AsyncStorage, using state values:', error);
+      }
+      
       const params: any = { limit: 20, skip: 0 }; // Always start from beginning, no skip
       
-      // Only apply filters if they're not at default values
-      // This ensures we get all compatible users on initial load
-      if (maxDistance && maxDistance < 125) {
+      // Always apply filters using the actual values (from AsyncStorage or state)
+      if (actualMaxDistance && actualMaxDistance < 125) {
         // Convert miles to km for API: km = miles / 0.621371
-        params.max_distance = Math.round(maxDistance / 0.621371);
+        params.max_distance = Math.round(actualMaxDistance / 0.621371);
       }
-      if (minAge && minAge > 18) {
-        params.min_age = Math.round(minAge);
+      if (actualMinAge && actualMinAge > 18) {
+        params.min_age = Math.round(actualMinAge);
       }
-      if (maxAge && maxAge < 80) {
-        params.max_age = Math.round(maxAge);
+      if (actualMaxAge && actualMaxAge < 80) {
+        params.max_age = Math.round(actualMaxAge);
       }
       
       const callId = Date.now();
       console.log(`[BrowseScreen] ===== LOADING USERS (Call ID: ${callId}) =====`);
-      console.log(`[BrowseScreen] Current filter state:`, {
-        maxDistance,
-        minAge,
-        maxAge,
+      console.log(`[BrowseScreen] Filter values being used:`, {
+        maxDistance: actualMaxDistance,
+        minAge: actualMinAge,
+        maxAge: actualMaxAge,
+        stateValues: { maxDistance, minAge, maxAge },
         filtersLoaded: filtersLoadedRef.current,
         initialLoadDone: initialLoadDoneRef.current,
         existingUsersCount: users.length,
@@ -165,7 +209,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [maxDistance, minAge, maxAge, browseUsers]); // Include filter dependencies (not users.length to avoid circular dependency)
+  }, [maxDistance, minAge, maxAge, browseUsers, users.length]); // Include filter dependencies
 
   // Load likes count
   const loadLikesCount = useCallback(async () => {
@@ -202,8 +246,16 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           attempts++;
         }
         
-        // Wait a bit more for state to update after filters are loaded
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Wait longer for state to update after filters are loaded
+        // React state updates are async, so we need to wait for them to propagate
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Log the actual filter values that will be used
+        console.log('[BrowseScreen] After waiting for filters, current values:', {
+          maxDistance,
+          minAge,
+          maxAge,
+        });
         
         // Update location first to ensure fresh distance calculations
         // Only update location on initial load to avoid changing results on navigation
