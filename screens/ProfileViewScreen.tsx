@@ -135,6 +135,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
         <ScrollView
           ref={scrollViewRef}
           style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
         >
           {/* Photo Carousel */}
@@ -184,30 +185,19 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             )}
           </View>
 
-          {/* User Details */}
+          {/* User Details - Below photos */}
           <View style={styles.detailsContainer}>
             <Text style={styles.userName}>{user.name}</Text>
             <Text style={styles.userAge}>{user.age} years old</Text>
             
             {formatDistance(user.distance_km) && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>📍 Distance:</Text>
-                <Text style={styles.detailValue}>{formatDistance(user.distance_km)}</Text>
-              </View>
-            )}
-
-            {user.gender && (
-              <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>👤 Gender:</Text>
-                <Text style={styles.detailValue}>{user.gender}</Text>
-              </View>
+              <Text style={styles.userDistance}>
+                📍 {formatDistance(user.distance_km)}
+              </Text>
             )}
 
             {user.bio && (
-              <View style={styles.bioSection}>
-                <Text style={styles.bioLabel}>About</Text>
-                <Text style={styles.bioText}>{user.bio}</Text>
-              </View>
+              <Text style={styles.bioText}>{user.bio}</Text>
             )}
           </View>
         </ScrollView>
@@ -268,6 +258,9 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
   },
+  scrollContent: {
+    paddingBottom: 100, // Space for fixed buttons
+  },
   photoContainer: {
     position: 'relative',
     height: screenHeight * 0.6,
@@ -317,56 +310,37 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   detailsContainer: {
-    backgroundColor: 'rgba(255,255,255,0.95)',
+    backgroundColor: 'rgba(255, 182, 193, 0.9)',
     padding: 20,
-    borderTopLeftRadius: 25,
-    borderTopRightRadius: 25,
-    marginTop: -25,
+    paddingTop: 15,
   },
   userName: {
-    fontSize: 32,
+    fontSize: 24,
     fontWeight: 'bold',
     color: '#1a1a1a',
     marginBottom: 4,
   },
   userAge: {
-    fontSize: 18,
-    color: '#666',
-    marginBottom: 16,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  detailLabel: {
     fontSize: 16,
     color: '#666',
-    marginRight: 8,
+    marginBottom: 4,
   },
-  detailValue: {
-    fontSize: 16,
-    color: '#1a1a1a',
-    fontWeight: '500',
-  },
-  bioSection: {
-    marginTop: 20,
-    paddingTop: 20,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(0,0,0,0.1)',
-  },
-  bioLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#1a1a1a',
+  userDistance: {
+    fontSize: 14,
+    color: '#666',
     marginBottom: 8,
   },
   bioText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#333',
-    lineHeight: 24,
+    lineHeight: 20,
+    marginTop: 4,
   },
   actionButtons: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
