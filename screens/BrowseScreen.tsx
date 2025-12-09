@@ -382,11 +382,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
     const photos = user.photos && user.photos.length > 0 ? user.photos : [];
 
     return (
-      <TouchableOpacity
-        style={styles.userCard}
-        onPress={() => navigation.navigate('ProfileView', { user })}
-        activeOpacity={0.9}
-      >
+      <View style={styles.userCard}>
         <View style={styles.photoContainer}>
           {photos.length > 0 ? (
             <ScrollView
@@ -394,6 +390,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
               pagingEnabled
               showsHorizontalScrollIndicator={false}
               style={styles.photoScroll}
+              scrollEnabled={true}
               onMomentumScrollEnd={(event) => {
                 const offsetX = event.nativeEvent.contentOffset.x;
                 const index = Math.round(offsetX / photoWidth);
@@ -433,22 +430,31 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           )}
         </View>
 
-        {/* User info below photo */}
-        <View style={styles.userInfoContainer}>
-          <Text style={styles.userName}>{user.name}</Text>
-          <Text style={styles.userAge}>{user.age} years old</Text>
-          {formatDistance(user.distance_km) && (
-            <Text style={styles.userDistance}>
-              📍 {formatDistance(user.distance_km)}
-            </Text>
-          )}
-          {user.bio && (
-            <Text style={styles.bioPreview} numberOfLines={2}>
-              {user.bio}
-            </Text>
-          )}
-        </View>
-      </TouchableOpacity>
+        {/* User info below photo - tappable to open profile */}
+        <TouchableOpacity
+          style={styles.userInfoContainer}
+          onPress={() => navigation.navigate('ProfileView', { user })}
+          activeOpacity={0.8}
+        >
+          <View style={styles.userInfoContent}>
+            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userAge}>{user.age} years old</Text>
+            {formatDistance(user.distance_km) && (
+              <Text style={styles.userDistance}>
+                📍 {formatDistance(user.distance_km)}
+              </Text>
+            )}
+            {user.bio && (
+              <Text style={styles.bioPreview} numberOfLines={2}>
+                {user.bio}
+              </Text>
+            )}
+          </View>
+          <View style={styles.tapForDetailsContainer}>
+            <Text style={styles.tapForDetailsText}>Tap for details →</Text>
+          </View>
+        </TouchableOpacity>
+      </View>
     );
   };
 
@@ -798,6 +804,22 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255, 182, 193, 0.9)',
     padding: 20,
     paddingTop: 15,
+    position: 'relative',
+  },
+  userInfoContent: {
+    flex: 1,
+  },
+  tapForDetailsContainer: {
+    marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.3)',
+    alignItems: 'flex-end',
+  },
+  tapForDetailsText: {
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 12,
+    fontStyle: 'italic',
   },
   userName: {
     fontSize: 24,
