@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
+import { Alert } from 'react-native';
 import { API_BASE_URL } from '../config';
 import { initializePushNotifications } from '../utils/notifications';
 
@@ -158,6 +159,53 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Set up axios response interceptor for 401 errors
+  useEffect(() => {
+    const responseInterceptor = api.interceptors.response.use(
+      (response) => response,
+      async (error: AxiosError) => {
+        if (error.response?.status === 401) {
+          // Token expired or invalid - auto logout
+          try {
+            await AsyncStorage.removeItem('authToken');
+            setToken(null);
+            setUser(null);
+            delete api.defaults.headers.common['Authorization'];
+            
+            // Show alert and reset navigation
+            Alert.alert(
+              'Session Expired',
+              'Your session has expired. Please log in again.',
+              [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    setTimeout(() => {
+                      try {
+                        const { resetToAuth } = require('../utils/navigation');
+                        resetToAuth();
+                      } catch (e) {
+                        console.log('Navigation reset failed or not ready', e);
+                      }
+                    }, 0);
+                  },
+                },
+              ]
+            );
+          } catch (logoutError) {
+            console.error('Error during auto-logout:', logoutError);
+          }
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    // Cleanup interceptor on unmount
+    return () => {
+      api.interceptors.response.eject(responseInterceptor);
+    };
+  }, []);
 
   // Initialize auth state from AsyncStorage
   useEffect(() => {
