@@ -35,8 +35,6 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
   const genderOptions = [
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' },
-    { label: 'Non-binary', value: 'non-binary' },
-    { label: 'Other', value: 'other' },
   ];
 
   const seekingGenderOptions = [
