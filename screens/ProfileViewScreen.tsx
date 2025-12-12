@@ -200,26 +200,26 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
               <Text style={styles.bioText}>{user.bio}</Text>
             )}
           </View>
+
+          {/* Action Buttons - Inside ScrollView */}
+          <View style={styles.actionButtons}>
+            <TouchableOpacity
+              style={[styles.passButton, isInteracting && styles.buttonDisabled]}
+              onPress={handlePass}
+              disabled={isInteracting}
+            >
+              <Text style={styles.passButtonText}>✕</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
+              onPress={handleLike}
+              disabled={isInteracting}
+            >
+              <Text style={styles.likeButtonText}>❤️</Text>
+            </TouchableOpacity>
+          </View>
         </ScrollView>
-
-        {/* Action Buttons */}
-        <View style={styles.actionButtons}>
-          <TouchableOpacity
-            style={[styles.passButton, isInteracting && styles.buttonDisabled]}
-            onPress={handlePass}
-            disabled={isInteracting}
-          >
-            <Text style={styles.passButtonText}>✕</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
-            onPress={handleLike}
-            disabled={isInteracting}
-          >
-            <Text style={styles.likeButtonText}>❤️</Text>
-          </TouchableOpacity>
-        </View>
       </SafeAreaView>
     </GradientBackground>
   );
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 100, // Space for fixed buttons
+    paddingBottom: 20,
   },
   photoContainer: {
     position: 'relative',
@@ -337,18 +337,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   actionButtons: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
     paddingVertical: 20,
-    paddingBottom: 30,
+    paddingBottom: 20,
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.15)',
+    marginTop: 10,
   },
   passButton: {
     backgroundColor: '#D4A574',
