@@ -22,6 +22,7 @@ interface ForgotPasswordScreenProps {
 const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [emailSent, setEmailSent] = useState(false);
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -46,34 +47,12 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
         { email: email.trim() }
       );
 
-      // Show success message
-      Alert.alert(
-        'Success',
-        "If an account exists with that email, you'll receive password reset instructions.",
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      // Show success state
+      setEmailSent(true);
     } catch (error: any) {
       console.error('Error sending reset link:', error);
       // Still show success message for security (don't reveal if email exists)
-      Alert.alert(
-        'Success',
-        "If an account exists with that email, you'll receive password reset instructions.",
-        [
-          {
-            text: 'OK',
-            onPress: () => {
-              navigation.goBack();
-            },
-          },
-        ]
-      );
+      setEmailSent(true);
     } finally {
       setIsLoading(false);
     }
@@ -87,45 +66,79 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
       >
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           <View style={styles.content}>
-            <Text style={styles.title}>Forgot Password?</Text>
-            <Text style={styles.subtitle}>
-              Enter your email address and we'll send you instructions to reset your password.
-            </Text>
+            {!emailSent ? (
+              <>
+                <Text style={styles.title}>Forgot Password?</Text>
+                <Text style={styles.subtitle}>
+                  Enter your email address and we'll send you instructions to reset your password.
+                </Text>
 
-            <View style={styles.form}>
-              <View style={styles.inputContainer}>
-                <Text style={styles.label}>Email *</Text>
-                <TextInput
-                  style={styles.input}
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  editable={!isLoading}
-                />
-              </View>
+                <View style={styles.form}>
+                  <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Email *</Text>
+                    <TextInput
+                      style={styles.input}
+                      value={email}
+                      onChangeText={setEmail}
+                      placeholder="Enter your email"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                      editable={!isLoading}
+                    />
+                  </View>
 
-              <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
-                onPress={handleSendResetLink}
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color="#fff" />
-                ) : (
-                  <Text style={styles.buttonText}>Send Reset Link</Text>
-                )}
-              </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.button, isLoading && styles.buttonDisabled]}
+                    onPress={handleSendResetLink}
+                    disabled={isLoading}
+                  >
+                    {isLoading ? (
+                      <ActivityIndicator color="#fff" />
+                    ) : (
+                      <Text style={styles.buttonText}>Send Reset Link</Text>
+                    )}
+                  </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.backLink}
-                onPress={() => navigation.goBack()}
-              >
-                <Text style={styles.backLinkText}>← Back to Login</Text>
-              </TouchableOpacity>
-            </View>
+                  <TouchableOpacity
+                    style={styles.backLink}
+                    onPress={() => navigation.goBack()}
+                  >
+                    <Text style={styles.backLinkText}>← Back to Login</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.title}>Check Your Email</Text>
+                <Text style={styles.subtitle}>
+                  If an account exists with that email, you will receive password reset instructions.
+                </Text>
+
+                <View style={styles.successContainer}>
+                  <Text style={styles.successIcon}>📧</Text>
+                  <Text style={styles.successText}>
+                    Check your email for reset instructions.
+                  </Text>
+                </View>
+
+                <View style={styles.form}>
+                  <TouchableOpacity
+                    style={styles.button}
+                    onPress={() => navigation.navigate('ResetPassword')}
+                  >
+                    <Text style={styles.buttonText}>Already have a token? Reset password</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.backLink}
+                    onPress={() => navigation.navigate('Login')}
+                  >
+                    <Text style={styles.backLinkText}>← Back to Login</Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -205,6 +218,25 @@ const styles = StyleSheet.create({
   backLinkText: {
     fontSize: 16,
     color: '#007AFF',
+    fontWeight: '500',
+  },
+  successContainer: {
+    backgroundColor: '#D4EDDA',
+    borderColor: '#28A745',
+    borderWidth: 1,
+    borderRadius: 12,
+    padding: 20,
+    marginBottom: 30,
+    alignItems: 'center',
+  },
+  successIcon: {
+    fontSize: 48,
+    marginBottom: 12,
+  },
+  successText: {
+    fontSize: 16,
+    color: '#155724',
+    textAlign: 'center',
     fontWeight: '500',
   },
 });

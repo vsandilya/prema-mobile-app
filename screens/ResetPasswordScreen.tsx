@@ -21,12 +21,10 @@ interface ResetPasswordScreenProps {
 }
 
 const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, route }) => {
+  const [resetToken, setResetToken] = useState(route?.params?.token || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
-  // Get reset token from route params (will be used with deep links later)
-  const resetToken = route?.params?.token || '';
 
   const validateForm = () => {
     if (!password.trim() || !confirmPassword.trim()) {
@@ -97,18 +95,23 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
           <View style={styles.content}>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
-              Enter your new password below.
+              Enter the reset token from your email and your new password.
             </Text>
 
-            {!resetToken && (
-              <View style={styles.warningContainer}>
-                <Text style={styles.warningText}>
-                  ⚠️ No reset token provided. This screen will be accessible via reset link.
-                </Text>
-              </View>
-            )}
-
             <View style={styles.form}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.label}>Reset Token *</Text>
+                <TextInput
+                  style={styles.input}
+                  value={resetToken}
+                  onChangeText={setResetToken}
+                  placeholder="Enter reset token from email"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  editable={!isLoading}
+                />
+              </View>
+
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>New Password *</Text>
                 <TextInput
@@ -118,7 +121,7 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
                   placeholder="Enter your new password"
                   secureTextEntry
                   autoCapitalize="none"
-                  editable={!!resetToken && !isLoading}
+                  editable={!isLoading}
                 />
               </View>
 
@@ -131,17 +134,17 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
                   placeholder="Confirm your new password"
                   secureTextEntry
                   autoCapitalize="none"
-                  editable={!!resetToken && !isLoading}
+                  editable={!isLoading}
                 />
               </View>
 
               <TouchableOpacity
                 style={[
                   styles.button,
-                  (isLoading || !resetToken) && styles.buttonDisabled,
+                  isLoading && styles.buttonDisabled,
                 ]}
                 onPress={handleResetPassword}
-                disabled={isLoading || !resetToken}
+                disabled={isLoading}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
