@@ -168,10 +168,11 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: '#1a1a1a',
     textAlign: 'center',
     marginBottom: 40,
     lineHeight: 24,
+    fontWeight: '500',
   },
   form: {
     width: '100%',
