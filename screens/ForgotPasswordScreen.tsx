@@ -112,13 +112,13 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
               <>
                 <Text style={styles.title}>Check Your Email</Text>
                 <Text style={styles.subtitle}>
-                  If an account exists with that email, you will receive password reset instructions.
+                  If an account exists with that email, you will receive a 6-digit reset code.
                 </Text>
 
                 <View style={styles.successContainer}>
                   <Text style={styles.successIcon}>📧</Text>
                   <Text style={styles.successText}>
-                    Check your email for reset instructions.
+                    Check your email for your 6-digit reset code.
                   </Text>
                 </View>
 
@@ -127,7 +127,7 @@ const ForgotPasswordScreen: React.FC<ForgotPasswordScreenProps> = ({ navigation 
                     style={styles.button}
                     onPress={() => navigation.navigate('ResetPassword')}
                   >
-                    <Text style={styles.buttonText}>Already have a token? Reset password</Text>
+                    <Text style={styles.buttonText}>Enter Reset Code</Text>
                   </TouchableOpacity>
 
                   <TouchableOpacity
