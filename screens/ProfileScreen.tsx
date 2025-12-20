@@ -134,14 +134,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 >
                   <Text style={styles.headerIconTextMatches}>💞</Text>
                 </TouchableOpacity>
-              </View>
-              <View style={styles.headerRight}>
-                <TouchableOpacity
-                  style={styles.infoButton}
-                  onPress={() => navigation.navigate('About')}
-                >
-                  <Text style={styles.infoButtonText}>ℹ️</Text>
-                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerIconButton}
                   onPress={() => navigation.navigate('EditProfile')}
@@ -149,6 +141,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   <Text style={styles.headerIconTextEdit}>✏️</Text>
                 </TouchableOpacity>
               </View>
+              <View style={styles.headerRight} />
+            </View>
+
+            {/* Info icon in content area */}
+            <View style={styles.infoIconContainer}>
+              <TouchableOpacity
+                style={styles.infoButtonContent}
+                onPress={() => navigation.navigate('About')}
+              >
+                <Text style={styles.infoButtonTextContent}>ℹ️</Text>
+              </TouchableOpacity>
             </View>
 
             <View style={styles.profileCard}>
@@ -271,19 +274,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    width: 40,
   },
-  infoButton: {
+  infoIconContainer: {
+    position: 'absolute',
+    top: 15,
+    right: 20,
+    zIndex: 10,
+  },
+  infoButtonContent: {
     paddingVertical: 8,
-    paddingHorizontal: 4,
+    paddingHorizontal: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    borderRadius: 20,
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-    marginRight: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
-  infoButtonText: {
-    fontSize: 24,
-    color: '#fff',
+  infoButtonTextContent: {
+    fontSize: 20,
+    color: '#007AFF',
   },
   headerIconButton: {
     paddingVertical: 8,
