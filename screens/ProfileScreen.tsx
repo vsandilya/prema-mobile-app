@@ -140,18 +140,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 >
                   <Text style={styles.headerIconTextEdit}>✏️</Text>
                 </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.headerIconButton}
+                  onPress={() => navigation.navigate('About')}
+                >
+                  <Text style={styles.headerIconTextAbout}>ℹ️</Text>
+                </TouchableOpacity>
               </View>
               <View style={styles.headerRight} />
-            </View>
-
-            {/* Info icon in content area */}
-            <View style={styles.infoIconContainer}>
-              <TouchableOpacity
-                style={styles.infoButtonContent}
-                onPress={() => navigation.navigate('About')}
-              >
-                <Text style={styles.infoButtonTextContent}>ℹ️</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.profileCard}>
@@ -276,58 +272,37 @@ const styles = StyleSheet.create({
   headerRight: {
     width: 40,
   },
-  infoIconContainer: {
-    position: 'absolute',
-    top: 15,
-    right: 20,
-    zIndex: 10,
-  },
-  infoButtonContent: {
-    paddingVertical: 8,
-    paddingHorizontal: 8,
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius: 20,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  infoButtonTextContent: {
-    fontSize: 20,
-    color: '#007AFF',
-  },
   headerIconButton: {
     paddingVertical: 8,
-    paddingHorizontal: 12,
+    paddingHorizontal: 6,
   },
   headerIconTextBrowse: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#5AC8FA',
   },
   headerIconTextMessages: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#007AFF',
   },
   headerIconTextLikes: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#FF9500',
   },
   headerIconTextMatches: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#FF2D87',
   },
   headerIconTextProfile: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#9B59B6',
   },
   headerIconTextEdit: {
-    fontSize: 24,
+    fontSize: 22,
     color: '#FFFFFF',
+  },
+  headerIconTextAbout: {
+    fontSize: 22,
+    color: '#34C759',
   },
   headerIconActive: {
     opacity: 0.6,
