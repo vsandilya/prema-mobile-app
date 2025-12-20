@@ -149,23 +149,23 @@ const styles = StyleSheet.create({
     paddingBottom: 40,
   },
   content: {
-    padding: 20,
+    padding: 16,
   },
   section: {
-    marginBottom: 40,
+    marginBottom: 24,
   },
   sectionTitle: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#1a1a1a',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   guidelineItem: {
     flexDirection: 'row',
-    marginBottom: 24,
+    marginBottom: 12,
     backgroundColor: '#fff',
-    borderRadius: 12,
-    padding: 16,
+    borderRadius: 10,
+    padding: 12,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -173,23 +173,23 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   guidelineIcon: {
-    fontSize: 32,
-    marginRight: 16,
+    fontSize: 24,
+    marginRight: 12,
     alignSelf: 'flex-start',
   },
   guidelineContent: {
     flex: 1,
   },
   guidelineTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#1a1a1a',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   guidelineText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#666',
-    lineHeight: 22,
+    lineHeight: 20,
   },
 });
 

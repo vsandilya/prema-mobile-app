@@ -134,6 +134,14 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 >
                   <Text style={styles.headerIconTextMatches}>💞</Text>
                 </TouchableOpacity>
+              </View>
+              <View style={styles.headerRight}>
+                <TouchableOpacity
+                  style={styles.infoButton}
+                  onPress={() => navigation.navigate('About')}
+                >
+                  <Text style={styles.infoButtonText}>ℹ️</Text>
+                </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerIconButton}
                   onPress={() => navigation.navigate('EditProfile')}
@@ -141,12 +149,6 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   <Text style={styles.headerIconTextEdit}>✏️</Text>
                 </TouchableOpacity>
               </View>
-              <TouchableOpacity
-                style={styles.infoButton}
-                onPress={() => navigation.navigate('About')}
-              >
-                <Text style={styles.infoButtonText}>ℹ️</Text>
-              </TouchableOpacity>
             </View>
 
             <View style={styles.profileCard}>
@@ -269,13 +271,15 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   headerRight: {
-    width: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   infoButton: {
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 4,
     justifyContent: 'center',
     alignItems: 'center',
+    marginRight: 8,
   },
   infoButtonText: {
     fontSize: 24,
