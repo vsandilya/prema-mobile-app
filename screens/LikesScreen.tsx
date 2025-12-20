@@ -17,6 +17,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import GradientBackground from '../components/GradientBackground';
+import { formatDistance } from '../utils/formatting';
 
 interface UserProfile {
   id: number;
@@ -75,14 +76,6 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
   );
 
   // Convert km to miles for display: miles = km * 0.621371
-  const formatDistance = (distanceKm?: number) => {
-    if (!distanceKm) return null;
-    const distanceMiles = distanceKm * 0.621371;
-    if (distanceMiles < 1) {
-      return `${Math.round(distanceMiles * 5280)} feet away`;
-    }
-    return `${distanceMiles.toFixed(1)} miles away`;
-  };
 
   const getImageUrl = (photoUrl: string) => {
     if (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('uploads/')) {
