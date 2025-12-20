@@ -18,6 +18,7 @@ import BrowseScreen from './screens/BrowseScreen';
 import MatchesScreen from './screens/MatchesScreen';
 import LikesScreen from './screens/LikesScreen';
 import ProfileViewScreen from './screens/ProfileViewScreen';
+import AboutScreen from './screens/AboutScreen';
 import { setupNotificationListeners, getNotificationData } from './utils/notifications';
 import { navigationRef } from './utils/navigation';
 
@@ -107,6 +108,14 @@ function AppStack() {
       <Stack.Screen 
         name="ProfileView" 
         component={ProfileViewScreen}
+        options={{
+          headerShown: false,
+          presentation: 'modal',
+        }}
+      />
+      <Stack.Screen 
+        name="About" 
+        component={AboutScreen}
         options={{
           headerShown: false,
           presentation: 'modal',
