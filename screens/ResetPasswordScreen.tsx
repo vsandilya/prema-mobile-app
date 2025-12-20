@@ -26,6 +26,24 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
+  // Format token input: add space after 3 digits (e.g., "123 456")
+  const handleTokenChange = (text: string) => {
+    // Remove all non-digits
+    const digitsOnly = text.replace(/\D/g, '');
+    // Limit to 6 digits
+    const limited = digitsOnly.slice(0, 6);
+    // Add space after 3 digits
+    const formatted = limited.length > 3 
+      ? `${limited.slice(0, 3)} ${limited.slice(3)}`
+      : limited;
+    setResetToken(formatted);
+  };
+
+  // Get digits only for API call
+  const getTokenDigits = () => {
+    return resetToken.replace(/\D/g, '');
+  };
+
   const validateForm = () => {
     if (!password.trim() || !confirmPassword.trim()) {
       Alert.alert('Error', 'Please fill in all fields');
@@ -42,8 +60,9 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
       return false;
     }
 
-    if (!resetToken) {
-      Alert.alert('Error', 'Invalid reset token');
+    const tokenDigits = getTokenDigits();
+    if (tokenDigits.length !== 6) {
+      Alert.alert('Error', 'Please enter the 6-digit code');
       return false;
     }
 
@@ -55,10 +74,11 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
 
     setIsLoading(true);
     try {
+      const tokenDigits = getTokenDigits();
       const response = await axios.post(
         `${API_BASE_URL}/auth/reset-password`,
         {
-          token: resetToken,
+          token: tokenDigits,
           new_password: password,
         }
       );
@@ -95,17 +115,19 @@ const ResetPasswordScreen: React.FC<ResetPasswordScreenProps> = ({ navigation, r
           <View style={styles.content}>
             <Text style={styles.title}>Reset Password</Text>
             <Text style={styles.subtitle}>
-              Enter the reset token from your email and your new password.
+              Enter the 6-digit code from your email and your new password.
             </Text>
 
             <View style={styles.form}>
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Reset Token *</Text>
+                <Text style={styles.label}>6-Digit Code *</Text>
                 <TextInput
                   style={styles.input}
                   value={resetToken}
-                  onChangeText={setResetToken}
-                  placeholder="Enter reset token from email"
+                  onChangeText={handleTokenChange}
+                  placeholder="123 456"
+                  keyboardType="number-pad"
+                  maxLength={7} // 6 digits + 1 space
                   autoCapitalize="none"
                   autoCorrect={false}
                   editable={!isLoading}
@@ -226,8 +248,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    fontSize: 16,
+    fontSize: 24,
     color: '#1a1a1a',
+    fontWeight: '600',
+    letterSpacing: 2,
+    textAlign: 'center',
   },
   button: {
     backgroundColor: '#007AFF',
