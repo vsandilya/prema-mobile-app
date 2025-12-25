@@ -6,8 +6,10 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
-  View
+  View,
+  Modal
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -20,8 +22,13 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, logout, getUsersWhoLikedMe } = useAuth();
+  const { user, logout, getUsersWhoLikedMe, getBlockedUsers, unblockUser, deleteAccount } = useAuth();
   const [likesCount, setLikesCount] = useState(0);
+  const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
+  const [showBlockedUsers, setShowBlockedUsers] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const loadLikesCount = async () => {
     try {
@@ -32,11 +39,46 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
     }
   };
 
+  const loadBlockedUsers = async () => {
+    try {
+      const blocked = await getBlockedUsers();
+      setBlockedUsers(blocked);
+    } catch (error) {
+      console.error('Error loading blocked users:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       loadLikesCount();
+      loadBlockedUsers();
     }, [])
   );
+
+  const handleUnblock = async (userId: number, userName: string) => {
+    Alert.alert(
+      'Unblock User',
+      `Unblock ${userName}? They will be able to see your profile and contact you again.`,
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Unblock',
+          onPress: async () => {
+            try {
+              await unblockUser(userId);
+              await loadBlockedUsers();
+              Alert.alert('Success', `${userName} has been unblocked`);
+            } catch (error: any) {
+              Alert.alert('Error', error.message || 'Failed to unblock user');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleLogout = () => {
     Alert.alert(
@@ -51,6 +93,54 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         },
       ]
     );
+  };
+
+  const handleDeleteAccount = () => {
+    Alert.alert(
+      'Delete Account?',
+      'This will permanently delete your account and all your data including matches, messages, and photos. This action cannot be undone.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Delete Account',
+          style: 'destructive',
+          onPress: () => {
+            setShowDeleteConfirm(true);
+            setDeleteConfirmText('');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleConfirmDelete = async () => {
+    if (deleteConfirmText !== 'DELETE') {
+      Alert.alert('Error', 'Please type "DELETE" exactly to confirm');
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      await deleteAccount();
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
+      Alert.alert('Account Deleted', 'Your account has been deleted', [
+        {
+          text: 'OK',
+          onPress: () => {
+            // Navigation will be handled by auth state change
+            // The logout will have already cleared the auth state
+          },
+        },
+      ]);
+    } catch (error: any) {
+      Alert.alert('Error', error.message || 'Failed to delete account');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -218,6 +308,46 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               </View>
             </View>
 
+            {blockedUsers.length > 0 && (
+              <View style={styles.section}>
+                <TouchableOpacity
+                  onPress={() => setShowBlockedUsers(!showBlockedUsers)}
+                  style={styles.blockedHeader}
+                >
+                  <Text style={styles.sectionTitle}>
+                    Blocked Users ({blockedUsers.length})
+                  </Text>
+                  <Text style={styles.toggleText}>
+                    {showBlockedUsers ? '▼' : '▶'}
+                  </Text>
+                </TouchableOpacity>
+                {showBlockedUsers && (
+                  <View style={styles.blockedList}>
+                    {blockedUsers.map((blocked) => (
+                      <View key={blocked.id} style={styles.blockedItem}>
+                        <View style={styles.blockedUserInfo}>
+                          <Text style={styles.blockedUserName}>
+                            {blocked.blocked_user_name}
+                          </Text>
+                          <Text style={styles.blockedDate}>
+                            Blocked {formatDate(blocked.created_at)}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.unblockButton}
+                          onPress={() =>
+                            handleUnblock(blocked.blocked_user_id, blocked.blocked_user_name)
+                          }
+                        >
+                          <Text style={styles.unblockButtonText}>Unblock</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+            )}
+
             <TouchableOpacity
               style={styles.logoutButton}
               onPress={handleLogout}
@@ -225,8 +355,65 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <Text style={styles.logoutButtonText}>Logout</Text>
             </TouchableOpacity>
 
+            <TouchableOpacity
+              style={styles.deleteAccountButton}
+              onPress={handleDeleteAccount}
+            >
+              <Text style={styles.deleteAccountButtonText}>Delete Account</Text>
+            </TouchableOpacity>
+
           </View>
         </ScrollView>
+
+        {/* Delete Account Confirmation Modal */}
+        <Modal
+          visible={showDeleteConfirm}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowDeleteConfirm(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Confirm Deletion</Text>
+              <Text style={styles.modalMessage}>
+                Type "DELETE" to confirm you want to permanently delete your account:
+              </Text>
+              <TextInput
+                style={styles.deleteInput}
+                value={deleteConfirmText}
+                onChangeText={setDeleteConfirmText}
+                placeholder="Type DELETE"
+                autoCapitalize="characters"
+                editable={!isDeleting}
+              />
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteConfirmText('');
+                  }}
+                  disabled={isDeleting}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.deleteButton,
+                    (deleteConfirmText !== 'DELETE' || isDeleting) && styles.buttonDisabled
+                  ]}
+                  onPress={handleConfirmDelete}
+                  disabled={deleteConfirmText !== 'DELETE' || isDeleting}
+                >
+                  <Text style={styles.deleteButtonText}>
+                    {isDeleting ? 'Deleting...' : 'Delete Account'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </GradientBackground>
   );
@@ -456,6 +643,135 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: 18,
     fontWeight: '600',
+  },
+  blockedHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  toggleText: {
+    fontSize: 16,
+    color: '#007AFF',
+  },
+  blockedList: {
+    marginTop: 12,
+  },
+  blockedItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e1e5e9',
+  },
+  blockedUserInfo: {
+    flex: 1,
+  },
+  blockedUserName: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 4,
+  },
+  blockedDate: {
+    fontSize: 14,
+    color: '#666',
+  },
+  unblockButton: {
+    backgroundColor: '#007AFF',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  unblockButtonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  deleteAccountButton: {
+    backgroundColor: 'rgba(255, 59, 48, 0.85)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    borderRadius: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 32,
+    marginTop: 12,
+    marginBottom: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deleteAccountButtonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 16,
+  },
+  modalMessage: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 20,
+    lineHeight: 22,
+  },
+  deleteInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 16,
+    color: '#1a1a1a',
+    marginBottom: 20,
+    borderWidth: 2,
+    borderColor: '#e1e5e9',
+    textAlign: 'center',
+    fontWeight: '600',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  deleteButton: {
+    backgroundColor: '#FF3B30',
+  },
+  deleteButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
+  },
+  buttonDisabled: {
+    opacity: 0.5,
   },
 });
 

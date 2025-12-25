@@ -46,6 +46,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [messageError, setMessageError] = useState<string>('');
   
   const flatListRef = useRef<FlatList>(null);
 
@@ -99,6 +100,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
 
     const messageContent = newMessage.trim();
     setNewMessage('');
+    setMessageError('');
     setIsSending(true);
 
     try {
@@ -113,8 +115,14 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
       }, 100);
     } catch (error: any) {
       console.error('Error sending message:', error);
-      Alert.alert('Error', error.message || 'Failed to send message');
-      setNewMessage(messageContent); // Restore the message
+      // Check if it's a content filter error
+      if (error.message && error.message.includes('inappropriate language')) {
+        setMessageError(error.message);
+        setNewMessage(messageContent); // Restore the message
+      } else {
+        Alert.alert('Error', error.message || 'Failed to send message');
+        setNewMessage(messageContent); // Restore the message
+      }
     } finally {
       setIsSending(false);
     }
@@ -207,29 +215,42 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
         />
 
         <View style={styles.inputContainer}>
-          <TextInput
-            style={styles.textInput}
-            value={newMessage}
-            onChangeText={setNewMessage}
-            placeholder="Type a message..."
-            multiline
-            maxLength={1000}
-            editable={!isSending}
-          />
-          <TouchableOpacity
-            style={[
-              styles.sendButton,
-              (!newMessage.trim() || isSending) && styles.sendButtonDisabled
-            ]}
-            onPress={handleSendMessage}
-            disabled={!newMessage.trim() || isSending}
-          >
-            {isSending ? (
-              <ActivityIndicator size="small" color="#fff" />
-            ) : (
-              <Text style={styles.sendButtonText}>Send</Text>
-            )}
-          </TouchableOpacity>
+          {messageError ? (
+            <Text style={styles.errorText}>{messageError}</Text>
+          ) : null}
+          <View style={styles.inputRow}>
+            <TextInput
+              style={[
+                styles.textInput,
+                messageError && styles.textInputError
+              ]}
+              value={newMessage}
+              onChangeText={(text) => {
+                setNewMessage(text);
+                if (messageError) {
+                  setMessageError('');
+                }
+              }}
+              placeholder="Type a message..."
+              multiline
+              maxLength={1000}
+              editable={!isSending}
+            />
+            <TouchableOpacity
+              style={[
+                styles.sendButton,
+                (!newMessage.trim() || isSending) && styles.sendButtonDisabled
+              ]}
+              onPress={handleSendMessage}
+              disabled={!newMessage.trim() || isSending}
+            >
+              {isSending ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.sendButtonText}>Send</Text>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -324,13 +345,15 @@ const styles = StyleSheet.create({
     color: '#1a1a1a',
   },
   inputContainer: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
     paddingHorizontal: 16,
     paddingVertical: 10,
     backgroundColor: '#fff',
     borderTopWidth: 1,
     borderTopColor: '#e1e5e9',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
   },
   textInput: {
     flex: 1,
@@ -343,6 +366,16 @@ const styles = StyleSheet.create({
     maxHeight: 100,
     fontSize: 16,
     backgroundColor: '#f8f9fa',
+  },
+  textInputError: {
+    borderColor: '#FF3B30',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginBottom: 8,
+    marginLeft: 4,
   },
   sendButton: {
     backgroundColor: '#007AFF',

@@ -41,6 +41,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
   const [processingPhotoIds, setProcessingPhotoIds] = useState<string[]>([]);
   const [isSettingPrimary, setIsSettingPrimary] = useState(false);
+  const [bioError, setBioError] = useState<string>('');
 
   const genderOptions = [
     { label: 'Male', value: 'male' },
@@ -70,6 +71,10 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (field === 'bio' && bioError) {
+      setBioError('');
+    }
   };
 
   const validateForm = () => {
@@ -282,7 +287,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
       ]);
     } catch (error: any) {
       console.error('Error updating profile:', error);
-      Alert.alert('Error', error.message || 'Failed to update profile');
+      // Check if it's a content filter error
+      if (error.message && error.message.includes('inappropriate language')) {
+        setBioError(error.message);
+      } else {
+        Alert.alert('Error', error.message || 'Failed to update profile');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -416,7 +426,11 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Bio</Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    bioError && styles.inputError
+                  ]}
                   value={formData.bio}
                   onChangeText={(value) => handleInputChange('bio', value)}
                   placeholder="Tell us about yourself..."
@@ -424,6 +438,9 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
                   numberOfLines={4}
                   textAlignVertical="top"
                 />
+                {bioError ? (
+                  <Text style={styles.errorText}>{bioError}</Text>
+                ) : null}
               </View>
 
               {/* Location Update Button */}
@@ -536,6 +553,17 @@ const styles = StyleSheet.create({
   textArea: {
     height: 100,
     paddingTop: 14,
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
+    fontWeight: '500',
   },
   genderContainer: {
     flexDirection: 'row',

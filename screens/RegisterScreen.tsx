@@ -30,6 +30,8 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
     seeking_gender: '',
   });
   const [isLoading, setIsLoading] = useState(false);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [bioError, setBioError] = useState<string>('');
   const { register } = useAuth();
 
   const genderOptions = [
@@ -45,6 +47,10 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+    // Clear error when user starts typing
+    if (field === 'bio' && bioError) {
+      setBioError('');
+    }
   };
 
   const validateForm = () => {
@@ -76,6 +82,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
       return false;
     }
 
+    if (!termsAgreed) {
+      Alert.alert('Error', 'You must agree to the Terms of Service and Community Guidelines to continue');
+      return false;
+    }
+
     return true;
   };
 
@@ -92,12 +103,18 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
         bio: formData.bio.trim() || undefined,
         gender: formData.gender,
         seeking_gender: formData.seeking_gender,
+        terms_agreed: termsAgreed,
       };
 
       await register(registerData);
       // Navigation will be handled by the auth state change
     } catch (error: any) {
-      Alert.alert('Registration Failed', error.message);
+      // Check if it's a content filter error
+      if (error.message && error.message.includes('inappropriate language')) {
+        setBioError(error.message);
+      } else {
+        Alert.alert('Registration Failed', error.message);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -224,7 +241,11 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.label}>Bio</Text>
                 <TextInput
-                  style={[styles.input, styles.textArea]}
+                  style={[
+                    styles.input,
+                    styles.textArea,
+                    bioError && styles.inputError
+                  ]}
                   value={formData.bio}
                   onChangeText={(value) => handleInputChange('bio', value)}
                   placeholder="Tell us about yourself..."
@@ -232,12 +253,36 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
                   numberOfLines={4}
                   textAlignVertical="top"
                 />
+                {bioError ? (
+                  <Text style={styles.errorText}>{bioError}</Text>
+                ) : null}
+              </View>
+
+              <View style={styles.termsContainer}>
+                <TouchableOpacity
+                  style={styles.checkboxContainer}
+                  onPress={() => setTermsAgreed(!termsAgreed)}
+                  activeOpacity={0.7}
+                >
+                  <View style={[styles.checkbox, termsAgreed && styles.checkboxChecked]}>
+                    {termsAgreed && <Text style={styles.checkmark}>✓</Text>}
+                  </View>
+                  <Text style={styles.termsText}>
+                    I agree to the{' '}
+                    <Text
+                      style={styles.termsLink}
+                      onPress={() => navigation.navigate('Terms')}
+                    >
+                      Terms of Service and Community Guidelines
+                    </Text>
+                  </Text>
+                </TouchableOpacity>
               </View>
 
               <TouchableOpacity
-                style={[styles.button, isLoading && styles.buttonDisabled]}
+                style={[styles.button, (isLoading || !termsAgreed) && styles.buttonDisabled]}
                 onPress={handleRegister}
-                disabled={isLoading}
+                disabled={isLoading || !termsAgreed}
               >
                 {isLoading ? (
                   <ActivityIndicator color="#fff" />
@@ -368,6 +413,56 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007AFF',
     fontWeight: '600',
+  },
+  termsContainer: {
+    marginBottom: 20,
+    marginTop: 10,
+  },
+  checkboxContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+  },
+  checkbox: {
+    width: 24,
+    height: 24,
+    borderWidth: 2,
+    borderColor: '#007AFF',
+    borderRadius: 4,
+    marginRight: 12,
+    marginTop: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  checkboxChecked: {
+    backgroundColor: '#007AFF',
+    borderColor: '#007AFF',
+  },
+  checkmark: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  termsText: {
+    flex: 1,
+    fontSize: 14,
+    color: '#1a1a1a',
+    lineHeight: 20,
+  },
+  termsLink: {
+    color: '#007AFF',
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
+  inputError: {
+    borderColor: '#FF3B30',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF3B30',
+    fontSize: 14,
+    marginTop: 4,
+    marginLeft: 4,
   },
 });
 

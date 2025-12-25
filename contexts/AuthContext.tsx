@@ -126,6 +126,21 @@ interface AuthContextType {
   getUsersWhoLikedMe: () => Promise<UserProfile[]>;
   getMatches: () => Promise<MatchResponse[]>;
   unmatchUser: (userId: number) => Promise<UnmatchResponse>;
+  // Reporting methods
+  reportUser: (userId: number, reason: string, details?: string) => Promise<void>;
+  // Blocking methods
+  blockUser: (userId: number) => Promise<void>;
+  unblockUser: (userId: number) => Promise<void>;
+  getBlockedUsers: () => Promise<BlockedUser[]>;
+  // Account deletion
+  deleteAccount: () => Promise<void>;
+}
+
+interface BlockedUser {
+  id: number;
+  blocked_user_id: number;
+  blocked_user_name: string;
+  created_at: string;
 }
 
 interface RegisterData {
@@ -135,10 +150,12 @@ interface RegisterData {
   age: number;
   bio?: string;
   gender: string;
+  seeking_gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
   preferences?: any;
+  terms_agreed: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -470,6 +487,73 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Reporting methods
+  const reportUser = async (userId: number, reason: string, details?: string): Promise<void> => {
+    try {
+      await api.post('/reports/', {
+        reported_user_id: userId,
+        reason: reason,
+        details: details,
+      });
+    } catch (error: any) {
+      console.error('Error reporting user:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to submit report');
+    }
+  };
+
+  // Blocking methods
+  const blockUser = async (userId: number): Promise<void> => {
+    try {
+      await api.post(`/users/block/${userId}`);
+    } catch (error: any) {
+      console.error('Error blocking user:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to block user');
+    }
+  };
+
+  const unblockUser = async (userId: number): Promise<void> => {
+    try {
+      await api.delete(`/users/unblock/${userId}`);
+    } catch (error: any) {
+      console.error('Error unblocking user:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to unblock user');
+    }
+  };
+
+  const getBlockedUsers = async (): Promise<BlockedUser[]> => {
+    try {
+      const response = await api.get('/users/blocked');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error getting blocked users:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to get blocked users');
+    }
+  };
+
+  // Account deletion
+  const deleteAccount = async (): Promise<void> => {
+    try {
+      await api.delete('/users/me');
+      // Clear local auth state
+      await AsyncStorage.removeItem('authToken');
+      setToken(null);
+      setUser(null);
+      delete api.defaults.headers.common['Authorization'];
+      // Reset navigation to login screen
+      setTimeout(() => {
+        try {
+          const { resetToAuth } = require('../utils/navigation');
+          resetToAuth();
+        } catch (e) {
+          console.log('Navigation reset failed or not ready', e);
+        }
+      }, 0);
+    } catch (error: any) {
+      console.error('Error deleting account:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to delete account');
+    }
+  };
+
   const registerForPushNotifications = async (): Promise<void> => {
     try {
       if (!token) {
@@ -504,6 +588,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getUsersWhoLikedMe,
     getMatches,
     unmatchUser,
+    reportUser,
+    blockUser,
+    unblockUser,
+    getBlockedUsers,
+    deleteAccount,
   };
 
   return (

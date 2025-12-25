@@ -8,6 +8,8 @@ import {
   TouchableOpacity,
   Dimensions,
   Alert,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GradientBackground from '../components/GradientBackground';
@@ -41,10 +43,23 @@ const photoWidth = screenWidth;
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
   const { user } = route.params;
-  const { likeUser, passUser } = useAuth();
+  const { likeUser, passUser, reportUser, blockUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
+  const [showReportModal, setShowReportModal] = useState(false);
+  const [selectedReason, setSelectedReason] = useState<string>('');
+  const [reportDetails, setReportDetails] = useState<string>('');
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [isBlocking, setIsBlocking] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
+
+  const reportReasons = [
+    { value: 'inappropriate_photos', label: 'Inappropriate photos' },
+    { value: 'harassment', label: 'Harassment or abuse' },
+    { value: 'fake_profile', label: 'Fake profile / Scam' },
+    { value: 'underage', label: 'Underage user' },
+    { value: 'other', label: 'Other' },
+  ];
 
   const photos = user.photos && user.photos.length > 0 ? user.photos : [];
 
@@ -111,10 +126,77 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     }
   };
 
+  const handleReport = () => {
+    setShowReportModal(true);
+    setSelectedReason('');
+    setReportDetails('');
+  };
+
+  const handleBlock = () => {
+    Alert.alert(
+      'Block User',
+      'Block this user? You won\'t see their profile and they won\'t be able to contact you.',
+      [
+        {
+          text: 'Cancel',
+          style: 'cancel',
+        },
+        {
+          text: 'Block',
+          style: 'destructive',
+          onPress: async () => {
+            setIsBlocking(true);
+            try {
+              await blockUser(user.id);
+              Alert.alert('User Blocked', 'User blocked', [
+                {
+                  text: 'OK',
+                  onPress: () => {
+                    navigation.navigate('Browse');
+                  },
+                },
+              ]);
+            } catch (error: any) {
+              console.error('Error blocking user:', error);
+              Alert.alert('Error', error.message || 'Failed to block user');
+            } finally {
+              setIsBlocking(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleSubmitReport = async () => {
+    if (!selectedReason) {
+      Alert.alert('Error', 'Please select a reason for reporting');
+      return;
+    }
+
+    setIsSubmittingReport(true);
+    try {
+      await reportUser(user.id, selectedReason, reportDetails || undefined);
+      setShowReportModal(false);
+      setSelectedReason('');
+      setReportDetails('');
+      Alert.alert(
+        'Report Submitted',
+        'Thank you for helping keep Prema safe. We will review your report.',
+        [{ text: 'OK', onPress: () => navigation.goBack() }]
+      );
+    } catch (error: any) {
+      console.error('Error submitting report:', error);
+      Alert.alert('Error', error.message || 'Failed to submit report');
+    } finally {
+      setIsSubmittingReport(false);
+    }
+  };
+
   return (
     <GradientBackground>
       <SafeAreaView style={styles.container} edges={['top']}>
-        {/* Header with close button */}
+        {/* Header with close button, block button, and report button */}
         <View style={styles.header}>
           <TouchableOpacity
             style={styles.closeButton}
@@ -122,7 +204,21 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           >
             <Text style={styles.closeButtonText}>✕</Text>
           </TouchableOpacity>
-          <View style={styles.headerSpacer} />
+          <View style={styles.headerRightButtons}>
+            <TouchableOpacity
+              style={styles.blockButton}
+              onPress={handleBlock}
+              disabled={isBlocking}
+            >
+              <Text style={styles.blockButtonText}>🚫</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.reportButton}
+              onPress={handleReport}
+            >
+              <Text style={styles.reportButtonText}>⚠️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         <ScrollView
@@ -213,6 +309,81 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             </TouchableOpacity>
           </View>
         </ScrollView>
+
+        {/* Report Modal */}
+        <Modal
+          visible={showReportModal}
+          transparent={true}
+          animationType="slide"
+          onRequestClose={() => setShowReportModal(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>Report User</Text>
+              <Text style={styles.modalSubtitle}>
+                Help us keep Prema safe by reporting inappropriate behavior
+              </Text>
+
+              <Text style={styles.reasonLabel}>Reason for reporting:</Text>
+              {reportReasons.map((reason) => (
+                <TouchableOpacity
+                  key={reason.value}
+                  style={[
+                    styles.reasonOption,
+                    selectedReason === reason.value && styles.reasonOptionSelected,
+                  ]}
+                  onPress={() => setSelectedReason(reason.value)}
+                >
+                  <Text
+                    style={[
+                      styles.reasonOptionText,
+                      selectedReason === reason.value && styles.reasonOptionTextSelected,
+                    ]}
+                  >
+                    {reason.label}
+                  </Text>
+                  {selectedReason === reason.value && (
+                    <Text style={styles.checkmark}>✓</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+
+              <Text style={styles.detailsLabel}>Additional details (optional):</Text>
+              <TextInput
+                style={styles.detailsInput}
+                value={reportDetails}
+                onChangeText={setReportDetails}
+                placeholder="Provide any additional information..."
+                multiline
+                numberOfLines={4}
+                textAlignVertical="top"
+              />
+
+              <View style={styles.modalButtons}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowReportModal(false)}
+                  disabled={isSubmittingReport}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.submitButton,
+                    (!selectedReason || isSubmittingReport) && styles.buttonDisabled,
+                  ]}
+                  onPress={handleSubmitReport}
+                  disabled={!selectedReason || isSubmittingReport}
+                >
+                  <Text style={styles.submitButtonText}>
+                    {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </SafeAreaView>
     </GradientBackground>
   );
@@ -247,6 +418,32 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 40,
+  },
+  headerRightButtons: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  blockButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  blockButtonText: {
+    fontSize: 20,
+  },
+  reportButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  reportButtonText: {
+    fontSize: 20,
   },
   scrollView: {
     flex: 1,
@@ -372,6 +569,111 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    width: '100%',
+    maxHeight: '80%',
+  },
+  modalTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#1a1a1a',
+    marginBottom: 8,
+  },
+  modalSubtitle: {
+    fontSize: 14,
+    color: '#666',
+    marginBottom: 24,
+    lineHeight: 20,
+  },
+  reasonLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 12,
+  },
+  reasonOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  reasonOptionSelected: {
+    backgroundColor: '#E6F4FE',
+    borderColor: '#007AFF',
+  },
+  reasonOptionText: {
+    fontSize: 16,
+    color: '#1a1a1a',
+    flex: 1,
+  },
+  reasonOptionTextSelected: {
+    fontWeight: '600',
+    color: '#007AFF',
+  },
+  checkmark: {
+    fontSize: 20,
+    color: '#007AFF',
+    fontWeight: 'bold',
+  },
+  detailsLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginTop: 20,
+    marginBottom: 12,
+  },
+  detailsInput: {
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    padding: 12,
+    fontSize: 14,
+    color: '#1a1a1a',
+    minHeight: 100,
+    textAlignVertical: 'top',
+    marginBottom: 20,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  cancelButton: {
+    backgroundColor: '#f5f5f5',
+  },
+  cancelButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#666',
+  },
+  submitButton: {
+    backgroundColor: '#FF6B6B',
+  },
+  submitButtonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#fff',
   },
 });
 
