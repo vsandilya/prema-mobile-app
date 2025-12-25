@@ -6,10 +6,14 @@ import {
   ScrollView,
   Image,
   TouchableOpacity,
+  TouchableWithoutFeedback,
   Dimensions,
   Alert,
   Modal,
   TextInput,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import GradientBackground from '../components/GradientBackground';
@@ -40,6 +44,7 @@ interface ProfileViewScreenProps {
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const photoWidth = screenWidth;
+const MODAL_MAX_HEIGHT = screenHeight * 0.9;
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
   const { user } = route.params;
@@ -315,74 +320,114 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           visible={showReportModal}
           transparent={true}
           animationType="slide"
-          onRequestClose={() => setShowReportModal(false)}
+          onRequestClose={() => {
+            Keyboard.dismiss();
+            setShowReportModal(false);
+          }}
         >
-          <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>Report User</Text>
-              <Text style={styles.modalSubtitle}>
-                Help us keep Prema safe by reporting inappropriate behavior
-              </Text>
-
-              <Text style={styles.reasonLabel}>Reason for reporting:</Text>
-              {reportReasons.map((reason) => (
-                <TouchableOpacity
-                  key={reason.value}
-                  style={[
-                    styles.reasonOption,
-                    selectedReason === reason.value && styles.reasonOptionSelected,
-                  ]}
-                  onPress={() => setSelectedReason(reason.value)}
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <TouchableWithoutFeedback onPress={() => {}}>
+                <KeyboardAvoidingView
+                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                  style={styles.modalKeyboardView}
                 >
-                  <Text
-                    style={[
-                      styles.reasonOptionText,
-                      selectedReason === reason.value && styles.reasonOptionTextSelected,
-                    ]}
-                  >
-                    {reason.label}
-                  </Text>
-                  {selectedReason === reason.value && (
-                    <Text style={styles.checkmark}>✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
+                  <View style={styles.modalContent}>
+                    {/* Header with close button */}
+                    <View style={styles.modalHeader}>
+                      <Text style={styles.modalTitle}>Report User</Text>
+                      <TouchableOpacity
+                        style={styles.modalCloseButton}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          setShowReportModal(false);
+                        }}
+                        disabled={isSubmittingReport}
+                      >
+                        <Text style={styles.modalCloseButtonText}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
 
-              <Text style={styles.detailsLabel}>Additional details (optional):</Text>
-              <TextInput
-                style={styles.detailsInput}
-                value={reportDetails}
-                onChangeText={setReportDetails}
-                placeholder="Provide any additional information..."
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
+                    <ScrollView
+                      style={styles.modalScrollView}
+                      contentContainerStyle={styles.modalScrollContent}
+                      keyboardShouldPersistTaps="handled"
+                      showsVerticalScrollIndicator={true}
+                    >
+                      <Text style={styles.modalSubtitle}>
+                        Help us keep Prema safe by reporting inappropriate behavior
+                      </Text>
 
-              <View style={styles.modalButtons}>
-                <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
-                  onPress={() => setShowReportModal(false)}
-                  disabled={isSubmittingReport}
-                >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.submitButton,
-                    (!selectedReason || isSubmittingReport) && styles.buttonDisabled,
-                  ]}
-                  onPress={handleSubmitReport}
-                  disabled={!selectedReason || isSubmittingReport}
-                >
-                  <Text style={styles.submitButtonText}>
-                    {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
+                      <Text style={styles.reasonLabel}>Reason for reporting:</Text>
+                      {reportReasons.map((reason) => (
+                        <TouchableOpacity
+                          key={reason.value}
+                          style={[
+                            styles.reasonOption,
+                            selectedReason === reason.value && styles.reasonOptionSelected,
+                          ]}
+                          onPress={() => setSelectedReason(reason.value)}
+                        >
+                          <Text
+                            style={[
+                              styles.reasonOptionText,
+                              selectedReason === reason.value && styles.reasonOptionTextSelected,
+                            ]}
+                          >
+                            {reason.label}
+                          </Text>
+                          {selectedReason === reason.value && (
+                            <Text style={styles.checkmark}>✓</Text>
+                          )}
+                        </TouchableOpacity>
+                      ))}
+
+                      <Text style={styles.detailsLabel}>Additional details (optional):</Text>
+                      <TextInput
+                        style={styles.detailsInput}
+                        value={reportDetails}
+                        onChangeText={setReportDetails}
+                        placeholder="Provide any additional information..."
+                        multiline
+                        numberOfLines={4}
+                        textAlignVertical="top"
+                        returnKeyType="done"
+                        onSubmitEditing={Keyboard.dismiss}
+                        blurOnSubmit={true}
+                      />
+                    </ScrollView>
+
+                    {/* Sticky buttons at bottom */}
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        style={[styles.modalButton, styles.cancelButton]}
+                        onPress={() => {
+                          Keyboard.dismiss();
+                          setShowReportModal(false);
+                        }}
+                        disabled={isSubmittingReport}
+                      >
+                        <Text style={styles.cancelButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={[
+                          styles.modalButton,
+                          styles.submitButton,
+                          (!selectedReason || isSubmittingReport) && styles.buttonDisabled,
+                        ]}
+                        onPress={handleSubmitReport}
+                        disabled={!selectedReason || isSubmittingReport}
+                      >
+                        <Text style={styles.submitButtonText}>
+                          {isSubmittingReport ? 'Submitting...' : 'Submit Report'}
+                        </Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </KeyboardAvoidingView>
+              </TouchableWithoutFeedback>
             </View>
-          </View>
+          </TouchableWithoutFeedback>
         </Modal>
       </SafeAreaView>
     </GradientBackground>
@@ -577,18 +622,54 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
   },
+  modalKeyboardView: {
+    width: '100%',
+    maxHeight: MODAL_MAX_HEIGHT,
+  },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 24,
     width: '100%',
-    maxHeight: '80%',
+    maxHeight: MODAL_MAX_HEIGHT,
+    overflow: 'hidden',
+    flexDirection: 'column',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e1e5e9',
+  },
+  modalCloseButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#f5f5f5',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalCloseButtonText: {
+    fontSize: 18,
+    color: '#666',
+    fontWeight: 'bold',
   },
   modalTitle: {
     fontSize: 24,
     fontWeight: 'bold',
     color: '#1a1a1a',
-    marginBottom: 8,
+    flex: 1,
+  },
+  modalScrollView: {
+    flex: 1,
+  },
+  modalScrollContent: {
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
   },
   modalSubtitle: {
     fontSize: 14,
@@ -652,6 +733,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     gap: 12,
+    paddingHorizontal: 24,
+    paddingTop: 16,
+    paddingBottom: 24,
+    borderTopWidth: 1,
+    borderTopColor: '#e1e5e9',
+    backgroundColor: '#fff',
   },
   modalButton: {
     flex: 1,
