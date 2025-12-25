@@ -45,6 +45,7 @@ interface ProfileViewScreenProps {
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 const photoWidth = screenWidth;
 const MODAL_MAX_HEIGHT = screenHeight * 0.9;
+const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
   const { user } = route.params;
@@ -328,11 +329,12 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
             <View style={styles.modalOverlay}>
               <TouchableWithoutFeedback onPress={() => {}}>
-                <KeyboardAvoidingView
-                  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                  style={styles.modalKeyboardView}
-                >
-                  <View style={styles.modalContent}>
+                <View style={styles.modalKeyboardView}>
+                  <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.modalKeyboardAvoidingView}
+                  >
+                    <View style={styles.modalContent}>
                     {/* Header with close button */}
                     <View style={styles.modalHeader}>
                       <Text style={styles.modalTitle}>Report User</Text>
@@ -353,41 +355,44 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                       contentContainerStyle={styles.modalScrollContent}
                       keyboardShouldPersistTaps="handled"
                       showsVerticalScrollIndicator={true}
+                      nestedScrollEnabled={true}
                     >
                       <Text style={styles.modalSubtitle}>
                         Help us keep Prema safe by reporting inappropriate behavior
                       </Text>
 
                       <Text style={styles.reasonLabel}>Reason for reporting:</Text>
-                      {reportReasons.map((reason) => (
-                        <TouchableOpacity
-                          key={reason.value}
-                          style={[
-                            styles.reasonOption,
-                            selectedReason === reason.value && styles.reasonOptionSelected,
-                          ]}
-                          onPress={() => setSelectedReason(reason.value)}
-                        >
-                          <Text
+                      {reportReasons && reportReasons.length > 0 ? (
+                        reportReasons.map((reason) => (
+                          <TouchableOpacity
+                            key={reason.value}
                             style={[
-                              styles.reasonOptionText,
-                              selectedReason === reason.value && styles.reasonOptionTextSelected,
+                              styles.reasonOption,
+                              selectedReason === reason.value && styles.reasonOptionSelected,
                             ]}
+                            onPress={() => setSelectedReason(reason.value)}
                           >
-                            {reason.label}
-                          </Text>
-                          {selectedReason === reason.value && (
-                            <Text style={styles.checkmark}>✓</Text>
-                          )}
-                        </TouchableOpacity>
-                      ))}
+                            <Text
+                              style={[
+                                styles.reasonOptionText,
+                                selectedReason === reason.value && styles.reasonOptionTextSelected,
+                              ]}
+                            >
+                              {reason.label}
+                            </Text>
+                            {selectedReason === reason.value && (
+                              <Text style={styles.checkmark}>✓</Text>
+                            )}
+                          </TouchableOpacity>
+                        ))
+                      ) : null}
 
                       <Text style={styles.detailsLabel}>Additional details (optional):</Text>
                       <TextInput
                         style={styles.detailsInput}
                         value={reportDetails}
                         onChangeText={setReportDetails}
-                        placeholder="Provide any additional information..."
+                        placeholder="Add details (optional)"
                         multiline
                         numberOfLines={4}
                         textAlignVertical="top"
@@ -423,8 +428,9 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                         </Text>
                       </TouchableOpacity>
                     </View>
-                  </View>
-                </KeyboardAvoidingView>
+                    </View>
+                  </KeyboardAvoidingView>
+                </View>
               </TouchableWithoutFeedback>
             </View>
           </TouchableWithoutFeedback>
@@ -625,12 +631,19 @@ const styles = StyleSheet.create({
   modalKeyboardView: {
     width: '100%',
     maxHeight: MODAL_MAX_HEIGHT,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalKeyboardAvoidingView: {
+    width: '100%',
+    maxHeight: MODAL_MAX_HEIGHT,
   },
   modalContent: {
     backgroundColor: '#fff',
     borderRadius: 20,
     width: '100%',
     maxHeight: MODAL_MAX_HEIGHT,
+    height: MODAL_CONTENT_HEIGHT, // Set explicit height
     overflow: 'hidden',
     flexDirection: 'column',
   },
@@ -643,6 +656,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#e1e5e9',
+    flexShrink: 0, // Prevent header from shrinking
   },
   modalCloseButton: {
     width: 32,
@@ -665,11 +679,14 @@ const styles = StyleSheet.create({
   },
   modalScrollView: {
     flex: 1,
+    minHeight: 300, // Minimum height to ensure content is visible
+    backgroundColor: 'transparent', // Ensure background is visible
   },
   modalScrollContent: {
     paddingHorizontal: 24,
     paddingTop: 16,
     paddingBottom: 24,
+    flexGrow: 1, // Allow content to grow and be scrollable
   },
   modalSubtitle: {
     fontSize: 14,
@@ -739,6 +756,7 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: '#e1e5e9',
     backgroundColor: '#fff',
+    flexShrink: 0, // Prevent buttons from shrinking
   },
   modalButton: {
     flex: 1,
