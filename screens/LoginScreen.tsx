@@ -18,7 +18,7 @@ import { Feather } from '@expo/vector-icons';
 
 import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
-const LogoImage = require('../assets/images/prema-logo.png');
+const LogoImage = require('../assets/images/prema-logo-2.png');
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -369,8 +369,8 @@ const styles = StyleSheet.create({
   logoInner: {
     borderRadius: 28,
     overflow: 'hidden',
-    width: 130,
-    height: 130,
+    width: 150,
+    height: 150,
     backgroundColor: 'rgba(255, 255, 255, 0.12)',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
