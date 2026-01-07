@@ -10,6 +10,6 @@ export function resetToAuth() {
 
 export function resetToApp() {
   if (navigationRef.isReady()) {
-    navigationRef.reset({ index: 0, routes: [{ name: 'Browse' }] });
+    navigationRef.reset({ index: 0, routes: [{ name: 'Browse' }] }); // Browse still refers to SlotMachineScreen
   }
 }

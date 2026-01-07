@@ -103,6 +103,18 @@ interface UnmatchResponse {
   message: string;
 }
 
+interface SpinResponse {
+  success: boolean;
+  profile?: UserProfile;
+  spins_remaining: number;
+  message: string;
+}
+
+interface SpinsStatusResponse {
+  spins_remaining: number;
+  resets_at: string;
+}
+
 interface AuthContextType {
   user: User | null;
   token: string | null;
@@ -126,6 +138,9 @@ interface AuthContextType {
   getUsersWhoLikedMe: () => Promise<UserProfile[]>;
   getMatches: () => Promise<MatchResponse[]>;
   unmatchUser: (userId: number) => Promise<UnmatchResponse>;
+  // Spin methods
+  spin: () => Promise<SpinResponse>;
+  getSpinStatus: () => Promise<SpinsStatusResponse>;
   // Reporting methods
   reportUser: (userId: number, reason: string, details?: string) => Promise<void>;
   // Blocking methods
@@ -487,6 +502,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  // Spin methods
+  const spin = async (): Promise<SpinResponse> => {
+    try {
+      const response = await api.post('/spin');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error spinning:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to spin');
+    }
+  };
+
+  const getSpinStatus = async (): Promise<SpinsStatusResponse> => {
+    try {
+      const response = await api.get('/spin/status');
+      return response.data;
+    } catch (error: any) {
+      console.error('Error getting spin status:', error);
+      throw new Error(error.response?.data?.detail || 'Failed to get spin status');
+    }
+  };
+
   // Reporting methods
   const reportUser = async (userId: number, reason: string, details?: string): Promise<void> => {
     try {
@@ -588,6 +624,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     getUsersWhoLikedMe,
     getMatches,
     unmatchUser,
+    spin,
+    getSpinStatus,
     reportUser,
     blockUser,
     unblockUser,

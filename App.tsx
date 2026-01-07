@@ -15,7 +15,7 @@ import EditProfileScreen from './screens/EditProfileScreen';
 import FullScreenPhotoScreen from './screens/FullScreenPhotoScreen';
 import ConversationsScreen from './screens/ConversationsScreen';
 import ChatScreen from './screens/ChatScreen';
-import BrowseScreen from './screens/BrowseScreen';
+import SlotMachineScreen from './screens/SlotMachineScreen';
 import MatchesScreen from './screens/MatchesScreen';
 import LikesScreen from './screens/LikesScreen';
 import ProfileViewScreen from './screens/ProfileViewScreen';
@@ -50,7 +50,7 @@ function AppStack() {
     >
       <Stack.Screen 
         name="Browse" 
-        component={BrowseScreen}
+        component={SlotMachineScreen}
         options={{
           headerShown: false,
         }}
