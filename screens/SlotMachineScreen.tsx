@@ -310,42 +310,49 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           },
         ]}
       >
-        <View style={styles.profilePhotoContainer}>
-          {displayPhoto ? (
-            <Image
-              source={{ uri: getImageUrl(displayPhoto) }}
-              style={styles.profilePhoto}
-              resizeMode="cover"
-            />
-          ) : (
-            <View style={styles.placeholderPhoto}>
-              <Text style={styles.placeholderPhotoText}>
-                {currentProfile.name.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
-        </View>
+        <ScrollView 
+          style={styles.profileScrollView}
+          contentContainerStyle={styles.profileScrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.profilePhotoContainer}>
+            {displayPhoto ? (
+              <Image
+                source={{ uri: getImageUrl(displayPhoto) }}
+                style={styles.profilePhoto}
+                resizeMode="cover"
+              />
+            ) : (
+              <View style={styles.placeholderPhoto}>
+                <Text style={styles.placeholderPhotoText}>
+                  {currentProfile.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
 
-        <View style={styles.profileInfo}>
-          <Text style={styles.profileName}>{currentProfile.name}</Text>
-          <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
-          {formatDistance(currentProfile.distance_km) && (
-            <Text style={styles.profileDistance}>
-              📍 {formatDistance(currentProfile.distance_km)}
-            </Text>
-          )}
-          {currentProfile.bio && (
-            <Text style={styles.profileBio} numberOfLines={3}>
-              {currentProfile.bio}
-            </Text>
-          )}
-        </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{currentProfile.name}</Text>
+            <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
+            {formatDistance(currentProfile.distance_km) && (
+              <Text style={styles.profileDistance}>
+                📍 {formatDistance(currentProfile.distance_km)}
+              </Text>
+            )}
+            {currentProfile.bio && (
+              <Text style={styles.profileBio} numberOfLines={3}>
+                {currentProfile.bio}
+              </Text>
+            )}
+          </View>
+        </ScrollView>
 
         <View style={styles.profileActions}>
           <TouchableOpacity
             style={[styles.passButton, isInteracting && styles.buttonDisabled]}
             onPress={handlePass}
             disabled={isInteracting}
+            activeOpacity={0.7}
           >
             <Text style={styles.passButtonText}>❌</Text>
           </TouchableOpacity>
@@ -354,6 +361,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
             onPress={handleLike}
             disabled={isInteracting}
+            activeOpacity={0.7}
           >
             <Text style={styles.likeButtonText}>❤️</Text>
           </TouchableOpacity>
@@ -605,6 +613,7 @@ const styles = StyleSheet.create({
   profileCard: {
     flex: 1,
     margin: 20,
+    marginBottom: 20,
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderRadius: 20,
     borderWidth: 1,
@@ -616,9 +625,16 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
+  profileScrollView: {
+    flex: 1,
+  },
+  profileScrollContent: {
+    flexGrow: 1,
+  },
   profilePhotoContainer: {
     width: '100%',
-    height: screenHeight * 0.5,
+    height: screenHeight * 0.4,
+    maxHeight: 400,
   },
   profilePhoto: {
     width: '100%',
@@ -670,26 +686,39 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.15)',
+    minHeight: 80,
   },
   passButton: {
-    backgroundColor: '#D4A574',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
-    minWidth: 75,
+    backgroundColor: '#DC3545',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    minWidth: 100,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   likeButton: {
-    backgroundColor: '#FF2D87',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 18,
-    paddingVertical: 9,
-    borderRadius: 20,
-    minWidth: 75,
+    backgroundColor: '#28A745',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    minWidth: 100,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   passButtonText: {
     fontSize: 28,
