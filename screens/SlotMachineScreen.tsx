@@ -55,6 +55,8 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   const [isSpinning, setIsSpinning] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [currentProfile, setCurrentProfile] = useState<UserProfile | null>(null);
+  const [pendingProfile, setPendingProfile] = useState<UserProfile | null>(null);
+  const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isLoadingStatus, setIsLoadingStatus] = useState(true);
 
@@ -70,7 +72,13 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   useFocusEffect(
     React.useCallback(() => {
       loadSpinStatus();
-    }, [])
+      // Restore pending profile if it exists
+      if (pendingProfile) {
+        setCurrentProfile(pendingProfile);
+        setShowProfile(true);
+        profileAnim.setValue(1);
+      }
+    }, [pendingProfile])
   );
 
   const loadSpinStatus = async () => {
@@ -155,6 +163,8 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           
           if (response.success && response.profile) {
             setCurrentProfile(response.profile);
+            setPendingProfile(response.profile);
+            setActivePhotoIndex(0);
             // Animate profile reveal
             Animated.spring(profileAnim, {
               toValue: 1,
@@ -182,7 +192,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       const response = await likeUser(currentProfile.id);
       
-      // Hide profile
+      // Hide profile and clear pending
       Animated.timing(profileAnim, {
         toValue: 0,
         duration: 300,
@@ -190,6 +200,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       }).start(() => {
         setShowProfile(false);
         setCurrentProfile(null);
+        setPendingProfile(null);
       });
 
       // Show match modal if it's a match
@@ -231,7 +242,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     try {
       await passUser(currentProfile.id);
       
-      // Hide profile
+      // Hide profile and clear pending
       Animated.timing(profileAnim, {
         toValue: 0,
         duration: 300,
@@ -239,6 +250,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       }).start(() => {
         setShowProfile(false);
         setCurrentProfile(null);
+        setPendingProfile(null);
       });
     } catch (error: any) {
       console.error('Error passing user:', error);
@@ -288,10 +300,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const photos = currentProfile.photos && currentProfile.photos.length > 0 
       ? currentProfile.photos 
       : [];
-    const primaryPhotoIndex = currentProfile.primary_photo || 0;
-    const displayPhoto = photos.length > 0 
-      ? photos[primaryPhotoIndex] || photos[0]
-      : null;
+    const photoWidth = screenWidth - 40; // Account for margins
 
     const profileScale = profileAnim.interpolate({
       inputRange: [0, 1],
@@ -299,6 +308,13 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     });
 
     const profileOpacity = profileAnim;
+
+    const handleProfileTap = () => {
+      navigation.navigate('ProfileView', { 
+        user: currentProfile,
+        fromSlotMachine: true 
+      });
+    };
 
     return (
       <Animated.View
@@ -315,36 +331,74 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           contentContainerStyle={styles.profileScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.profilePhotoContainer}>
-            {displayPhoto ? (
-              <Image
-                source={{ uri: getImageUrl(displayPhoto) }}
-                style={styles.profilePhoto}
-                resizeMode="cover"
-              />
-            ) : (
-              <View style={styles.placeholderPhoto}>
-                <Text style={styles.placeholderPhotoText}>
-                  {currentProfile.name.charAt(0).toUpperCase()}
-                </Text>
-              </View>
-            )}
-          </View>
+          <TouchableOpacity 
+            activeOpacity={0.9}
+            onPress={handleProfileTap}
+            style={styles.profileTappableArea}
+          >
+            <View style={styles.profilePhotoContainer}>
+              {photos.length > 0 ? (
+                <>
+                  <ScrollView
+                    horizontal
+                    pagingEnabled
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.photoScroll}
+                    onMomentumScrollEnd={(event) => {
+                      const offsetX = event.nativeEvent.contentOffset.x;
+                      const index = Math.round(offsetX / photoWidth);
+                      setActivePhotoIndex(Math.min(index, photos.length - 1));
+                    }}
+                  >
+                    {photos.map((photo, idx) => (
+                      <View key={`${photo}-${idx}`} style={styles.photoItem}>
+                        <Image
+                          source={{ uri: getImageUrl(photo) }}
+                          style={styles.profilePhoto}
+                          resizeMode="cover"
+                        />
+                      </View>
+                    ))}
+                  </ScrollView>
+                  {photos.length > 1 && (
+                    <View style={styles.photoPaginationContainer} pointerEvents="none">
+                      {photos.map((_, idx) => (
+                        <View
+                          key={`dot-${idx}`}
+                          style={[
+                            styles.photoPaginationDot,
+                            idx === activePhotoIndex && styles.photoPaginationDotActive,
+                          ]}
+                        />
+                      ))}
+                    </View>
+                  )}
+                </>
+              ) : (
+                <View style={styles.placeholderPhoto}>
+                  <Text style={styles.placeholderPhotoText}>
+                    {currentProfile.name.charAt(0).toUpperCase()}
+                  </Text>
+                </View>
+              )}
+            </View>
 
-          <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>{currentProfile.name}</Text>
-            <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
-            {formatDistance(currentProfile.distance_km) && (
-              <Text style={styles.profileDistance}>
-                📍 {formatDistance(currentProfile.distance_km)}
-              </Text>
-            )}
-            {currentProfile.bio && (
-              <Text style={styles.profileBio} numberOfLines={3}>
-                {currentProfile.bio}
-              </Text>
-            )}
-          </View>
+            <View style={styles.profileInfo}>
+              <Text style={styles.profileName}>{currentProfile.name}</Text>
+              <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
+              {formatDistance(currentProfile.distance_km) && (
+                <Text style={styles.profileDistance}>
+                  📍 {formatDistance(currentProfile.distance_km)}
+                </Text>
+              )}
+              {currentProfile.bio && (
+                <Text style={styles.profileBio} numberOfLines={3}>
+                  {currentProfile.bio}
+                </Text>
+              )}
+              <Text style={styles.tapHint}>Tap to view full profile</Text>
+            </View>
+          </TouchableOpacity>
         </ScrollView>
 
         <View style={styles.profileActions}>
@@ -354,7 +408,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             disabled={isInteracting}
             activeOpacity={0.7}
           >
-            <Text style={styles.passButtonText}>❌</Text>
+            <Text style={styles.passButtonText}>✕</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -427,7 +481,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         </View>
 
         {/* Slot Machine */}
-        {!showProfile && (
+        {!showProfile && !pendingProfile && (
           <View style={styles.slotMachineContainer}>
             <View style={styles.slotMachineFrame}>
               <View style={styles.reelsContainer}>
@@ -444,7 +498,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 (isSpinning || spinsRemaining <= 0) && styles.spinButtonDisabled,
               ]}
               onPress={handleSpin}
-              disabled={isSpinning || spinsRemaining <= 0}
+              disabled={isSpinning || spinsRemaining <= 0 || pendingProfile !== null}
             >
               <Text style={styles.spinButtonText}>
                 {isSpinning ? 'SPINNING...' : 'SPIN'}
@@ -631,14 +685,45 @@ const styles = StyleSheet.create({
   profileScrollContent: {
     flexGrow: 1,
   },
+  profileTappableArea: {
+    flex: 1,
+  },
   profilePhotoContainer: {
     width: '100%',
+    height: screenHeight * 0.4,
+    maxHeight: 400,
+    position: 'relative',
+  },
+  photoScroll: {
+    flexGrow: 0,
+  },
+  photoItem: {
+    width: screenWidth - 40,
     height: screenHeight * 0.4,
     maxHeight: 400,
   },
   profilePhoto: {
     width: '100%',
     height: '100%',
+  },
+  photoPaginationContainer: {
+    position: 'absolute',
+    bottom: 16,
+    alignSelf: 'center',
+    flexDirection: 'row',
+  },
+  photoPaginationDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: 'rgba(255, 255, 255, 0.4)',
+    marginHorizontal: 4,
+  },
+  photoPaginationDotActive: {
+    backgroundColor: '#FFFFFF',
+    width: 10,
+    height: 10,
+    borderRadius: 5,
   },
   placeholderPhoto: {
     width: '100%',
@@ -678,24 +763,30 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginTop: 4,
   },
+  tapHint: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
+    textAlign: 'center',
+  },
   profileActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
-    paddingVertical: 20,
+    paddingVertical: 15,
     backgroundColor: 'rgba(0,0,0,0.25)',
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.15)',
-    minHeight: 80,
   },
   passButton: {
     backgroundColor: '#DC3545',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    minWidth: 70,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -706,12 +797,12 @@ const styles = StyleSheet.create({
   },
   likeButton: {
     backgroundColor: '#28A745',
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 100,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    minWidth: 70,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -721,12 +812,14 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   passButtonText: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   likeButtonText: {
-    fontSize: 28,
+    fontSize: 24,
     color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   buttonDisabled: {
     opacity: 0.6,

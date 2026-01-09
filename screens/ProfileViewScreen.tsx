@@ -37,6 +37,7 @@ interface ProfileViewScreenProps {
   route: {
     params: {
       user: UserProfile;
+      fromSlotMachine?: boolean;
     };
   };
   navigation: any;
@@ -48,7 +49,7 @@ const MODAL_MAX_HEIGHT = screenHeight * 0.9;
 const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
-  const { user } = route.params;
+  const { user, fromSlotMachine } = route.params;
   const { likeUser, passUser, reportUser, blockUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -89,24 +90,45 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           `You and ${user.name} liked each other!`,
           [
             {
-              text: 'Keep Browsing',
-              onPress: () => navigation.goBack(),
+              text: fromSlotMachine ? 'Keep Spinning' : 'Keep Browsing',
+              onPress: () => {
+                if (fromSlotMachine) {
+                  navigation.navigate('Browse');
+                } else {
+                  navigation.goBack();
+                }
+              },
             },
             {
               text: 'Send Message',
               onPress: () => {
-                navigation.goBack();
-                navigation.navigate('Chat', {
-                  userId: user.id,
-                  userName: user.name,
-                });
+                if (fromSlotMachine) {
+                  navigation.navigate('Browse');
+                } else {
+                  navigation.goBack();
+                }
+                setTimeout(() => {
+                  navigation.navigate('Chat', {
+                    userId: user.id,
+                    userName: user.name,
+                  });
+                }, 100);
               },
             },
           ]
         );
       } else {
         Alert.alert('Liked!', `You liked ${user.name}`, [
-          { text: 'OK', onPress: () => navigation.goBack() },
+          { 
+            text: 'OK', 
+            onPress: () => {
+              if (fromSlotMachine) {
+                navigation.navigate('Browse');
+              } else {
+                navigation.goBack();
+              }
+            }
+          },
         ]);
       }
     } catch (error: any) {
@@ -123,7 +145,11 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     setIsInteracting(true);
     try {
       await passUser(user.id);
-      navigation.goBack();
+      if (fromSlotMachine) {
+        navigation.navigate('Browse');
+      } else {
+        navigation.goBack();
+      }
     } catch (error: any) {
       console.error('Error passing user:', error);
       Alert.alert('Error', error.message || 'Failed to pass user');
@@ -296,24 +322,28 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             )}
           </View>
 
-          {/* Action Buttons - Inside ScrollView */}
-          <View style={styles.actionButtons}>
-            <TouchableOpacity
-              style={[styles.passButton, isInteracting && styles.buttonDisabled]}
-              onPress={handlePass}
-              disabled={isInteracting}
-            >
-              <Text style={styles.passButtonText}>✕</Text>
-            </TouchableOpacity>
+          {/* Action Buttons - Only show if from slot machine */}
+          {fromSlotMachine && (
+            <View style={styles.actionButtons}>
+              <TouchableOpacity
+                style={[styles.passButton, isInteracting && styles.buttonDisabled]}
+                onPress={handlePass}
+                disabled={isInteracting}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.passButtonText}>✕</Text>
+              </TouchableOpacity>
 
-            <TouchableOpacity
-              style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
-              onPress={handleLike}
-              disabled={isInteracting}
-            >
-              <Text style={styles.likeButtonText}>❤️</Text>
-            </TouchableOpacity>
-          </View>
+              <TouchableOpacity
+                style={[styles.likeButton, isInteracting && styles.buttonDisabled]}
+                onPress={handleLike}
+                disabled={isInteracting}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.likeButtonText}>❤️</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </ScrollView>
 
         {/* Report Modal */}
@@ -589,34 +619,46 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   passButton: {
-    backgroundColor: '#D4A574',
+    backgroundColor: '#DC3545',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 120,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    minWidth: 70,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   likeButton: {
-    backgroundColor: '#FF2D87',
+    backgroundColor: '#28A745',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 120,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    minWidth: 70,
     alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   passButtonText: {
-    fontSize: 18,
+    fontSize: 24,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   likeButtonText: {
-    fontSize: 18,
+    fontSize: 24,
     color: '#FFFFFF',
-    fontWeight: '600',
+    fontWeight: 'bold',
   },
   buttonDisabled: {
     opacity: 0.6,
