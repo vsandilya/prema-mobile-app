@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import GradientBackground from '../components/GradientBackground';
 import { API_BASE_URL } from '../config';
@@ -68,17 +69,64 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Profile reveal animation
   const profileAnim = useRef(new Animated.Value(0)).current;
 
+  // Save pending profile to AsyncStorage
+  const savePendingProfile = async (profile: UserProfile) => {
+    try {
+      await AsyncStorage.setItem('pendingProfile', JSON.stringify(profile));
+    } catch (error) {
+      console.error('Error saving pending profile:', error);
+    }
+  };
+
+  // Load pending profile from AsyncStorage
+  const loadPendingProfile = async () => {
+    try {
+      const savedProfile = await AsyncStorage.getItem('pendingProfile');
+      if (savedProfile) {
+        const profile = JSON.parse(savedProfile) as UserProfile;
+        setPendingProfile(profile);
+        setCurrentProfile(profile);
+        setShowProfile(true);
+        profileAnim.setValue(1);
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error loading pending profile:', error);
+      return false;
+    }
+  };
+
+  // Remove pending profile from AsyncStorage
+  const removePendingProfile = async () => {
+    try {
+      await AsyncStorage.removeItem('pendingProfile');
+    } catch (error) {
+      console.error('Error removing pending profile:', error);
+    }
+  };
+
   // Load spin status on screen focus
   useFocusEffect(
     React.useCallback(() => {
-      loadSpinStatus();
-      // Restore pending profile if it exists
-      if (pendingProfile) {
-        setCurrentProfile(pendingProfile);
-        setShowProfile(true);
-        profileAnim.setValue(1);
-      }
-    }, [pendingProfile])
+      const initializeScreen = async () => {
+        // First check AsyncStorage for pending profile
+        const hasPendingProfile = await loadPendingProfile();
+        
+        // Load spin status
+        await loadSpinStatus();
+        
+        // If no pending profile in AsyncStorage, clear any state
+        if (!hasPendingProfile) {
+          setPendingProfile(null);
+          setCurrentProfile(null);
+          setShowProfile(false);
+          profileAnim.setValue(0);
+        }
+      };
+      
+      initializeScreen();
+    }, [])
   );
 
   const loadSpinStatus = async () => {
@@ -165,6 +213,8 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             setCurrentProfile(response.profile);
             setPendingProfile(response.profile);
             setActivePhotoIndex(0);
+            // Save to AsyncStorage immediately
+            savePendingProfile(response.profile);
             // Animate profile reveal
             Animated.spring(profileAnim, {
               toValue: 1,
@@ -191,6 +241,9 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setIsInteracting(true);
     try {
       const response = await likeUser(currentProfile.id);
+      
+      // Remove from AsyncStorage first
+      await removePendingProfile();
       
       // Hide profile and clear pending
       Animated.timing(profileAnim, {
@@ -241,6 +294,9 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     setIsInteracting(true);
     try {
       await passUser(currentProfile.id);
+      
+      // Remove from AsyncStorage first
+      await removePendingProfile();
       
       // Hide profile and clear pending
       Animated.timing(profileAnim, {
