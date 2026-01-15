@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   Alert,
   FlatList,
@@ -13,6 +13,9 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import Slider from '@react-native-community/slider';
+import RangeSlider from 'rn-range-slider';
 import { API_BASE_URL } from '../config';
 import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,13 +25,20 @@ interface ProfileScreenProps {
 }
 
 const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
-  const { user, logout, getUsersWhoLikedMe, getBlockedUsers, unblockUser, deleteAccount } = useAuth();
+  const { user, logout, getUsersWhoLikedMe, getBlockedUsers, unblockUser, deleteAccount, updateUser } = useAuth();
   const [likesCount, setLikesCount] = useState(0);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   const [showBlockedUsers, setShowBlockedUsers] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
+  
+  // Preferences state
+  const [maxDistance, setMaxDistance] = useState<number>(15); // in miles
+  const [minAge, setMinAge] = useState<number>(18);
+  const [maxAge, setMaxAge] = useState<number>(80);
+  const [preferencesLoaded, setPreferencesLoaded] = useState(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadLikesCount = async () => {
     try {
@@ -47,6 +57,77 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
       console.error('Error loading blocked users:', error);
     }
   };
+
+  // Load preferences from AsyncStorage
+  useEffect(() => {
+    const loadPreferences = async () => {
+      try {
+        const savedFilters = await AsyncStorage.getItem('browseFilters');
+        if (savedFilters) {
+          const filters = JSON.parse(savedFilters);
+          if (filters.maxDistance !== undefined) setMaxDistance(filters.maxDistance);
+          if (filters.minAge !== undefined) setMinAge(filters.minAge);
+          if (filters.maxAge !== undefined) setMaxAge(filters.maxAge);
+        }
+        setPreferencesLoaded(true);
+      } catch (error) {
+        console.error('Error loading preferences:', error);
+        setPreferencesLoaded(true);
+      }
+    };
+    loadPreferences();
+  }, []);
+
+  // Save preferences to AsyncStorage and optionally to user preferences
+  const savePreferences = async () => {
+    try {
+      // Save to AsyncStorage (for backward compatibility with BrowseScreen)
+      await AsyncStorage.setItem('browseFilters', JSON.stringify({
+        maxDistance,
+        minAge,
+        maxAge,
+      }));
+      
+      // Also save to user preferences in backend
+      if (user) {
+        const currentPreferences = user.preferences || {};
+        await updateUser({
+          preferences: {
+            ...currentPreferences,
+            maxDistance,
+            minAge,
+            maxAge,
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+    }
+  };
+
+  // Debounced save preferences
+  useEffect(() => {
+    if (!preferencesLoaded) return;
+    
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+    
+    debounceTimerRef.current = setTimeout(() => {
+      savePreferences();
+    }, 500);
+    
+    return () => {
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current);
+      }
+    };
+  }, [maxDistance, minAge, maxAge, preferencesLoaded]);
+
+  const handleAgeRangeChange = useCallback((low: number, high: number) => {
+    setMinAge(Math.round(low));
+    setMaxAge(Math.round(high));
+  }, []);
 
   useFocusEffect(
     useCallback(() => {
@@ -192,7 +273,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                   style={styles.headerIconButton}
                   onPress={() => navigation.navigate('Browse')}
                 >
-                  <Text style={styles.headerIconTextBrowse}>👓</Text>
+                  <Text style={styles.headerIconTextBrowse}>🎰</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={styles.headerIconButton}
@@ -288,6 +369,56 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
                 ) : (
                   <Text style={styles.placeholder}>No photos uploaded yet</Text>
                 )}
+              </View>
+            </View>
+
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Preferences</Text>
+              <View style={styles.sectionContent}>
+                {/* Distance Filter */}
+                <View style={styles.preferenceItem}>
+                  <Text style={styles.preferenceLabel}>
+                    📍 Max Distance: {Math.round(maxDistance)} miles
+                  </Text>
+                  <Slider
+                    style={styles.slider}
+                    minimumValue={1}
+                    maximumValue={125}
+                    step={1}
+                    value={maxDistance}
+                    onValueChange={(value) => setMaxDistance(Math.round(value))}
+                    minimumTrackTintColor="#FF6B6B"
+                    maximumTrackTintColor="#E5E5EA"
+                    thumbTintColor="#FF6B6B"
+                  />
+                  <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderLabel}>1 mile</Text>
+                    <Text style={styles.sliderLabel}>125 miles</Text>
+                  </View>
+                </View>
+
+                {/* Age Range Filter */}
+                <View style={styles.preferenceItem}>
+                  <Text style={styles.preferenceLabel}>
+                    🎂 Age Range: {Math.round(minAge)} - {Math.round(maxAge)}
+                  </Text>
+                  <RangeSlider
+                    min={18}
+                    max={80}
+                    step={1}
+                    low={minAge}
+                    high={maxAge}
+                    onValueChanged={handleAgeRangeChange}
+                    disableRange={false}
+                    renderThumb={() => <View style={styles.thumb} />}
+                    renderRail={() => <View style={styles.rail} />}
+                    renderRailSelected={() => <View style={styles.railSelected} />}
+                  />
+                  <View style={styles.sliderLabels}>
+                    <Text style={styles.sliderLabel}>18</Text>
+                    <Text style={styles.sliderLabel}>80</Text>
+                  </View>
+                </View>
               </View>
             </View>
 
@@ -772,6 +903,50 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.5,
+  },
+  preferenceItem: {
+    marginBottom: 24,
+  },
+  preferenceLabel: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 12,
+  },
+  slider: {
+    width: '100%',
+    height: 40,
+  },
+  sliderLabels: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 5,
+    marginTop: 4,
+  },
+  sliderLabel: {
+    fontSize: 12,
+    color: '#666',
+  },
+  thumb: {
+    width: 20,
+    height: 20,
+    backgroundColor: '#34C759',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 5,
+  },
+  rail: {
+    height: 6,
+    backgroundColor: 'rgba(0,0,0,0.1)',
+    borderRadius: 3,
+  },
+  railSelected: {
+    height: 6,
+    backgroundColor: '#34C759',
+    borderRadius: 3,
   },
 });
 

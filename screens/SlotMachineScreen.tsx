@@ -536,7 +536,12 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
 
         {/* Title and Spin Counter */}
         <View style={styles.titleContainer}>
-          <Text style={styles.title}>🎰 Spin for Love</Text>
+          {!showProfile && !pendingProfile && (
+            <Text style={styles.title}>🎰 Spin for Love</Text>
+          )}
+          {showProfile && (
+            <Text style={styles.profileTitle}>Your Match</Text>
+          )}
           <Text style={styles.spinCounter}>
             {spinsRemaining > 0 ? `🎰 ${spinsRemaining} spins remaining` : 'Come back tomorrow!'}
           </Text>
@@ -637,7 +642,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
   },
   title: {
-    fontSize: 32,
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 8,
+    textShadowColor: 'rgba(0, 0, 0, 0.3)',
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 4,
+  },
+  profileTitle: {
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#FFFFFF',
     marginBottom: 8,
