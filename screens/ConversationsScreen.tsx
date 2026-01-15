@@ -157,7 +157,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
               style={styles.headerIconButton}
               onPress={() => navigation.navigate('Browse')}
             >
-              <Text style={styles.headerIconTextBrowse}>👓</Text>
+              <Text style={styles.headerIconTextBrowse}>🎰</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.headerIconButton}
