@@ -331,58 +331,64 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           contentContainerStyle={styles.profileScrollContent}
           showsVerticalScrollIndicator={false}
         >
-          <TouchableOpacity 
-            activeOpacity={0.9}
-            onPress={handleProfileTap}
-            style={styles.profileTappableArea}
-          >
-            <View style={styles.profilePhotoContainer}>
-              {photos.length > 0 ? (
-                <>
-                  <ScrollView
-                    horizontal
-                    pagingEnabled
-                    showsHorizontalScrollIndicator={false}
-                    style={styles.photoScroll}
-                    onMomentumScrollEnd={(event) => {
-                      const offsetX = event.nativeEvent.contentOffset.x;
-                      const index = Math.round(offsetX / photoWidth);
-                      setActivePhotoIndex(Math.min(index, photos.length - 1));
-                    }}
-                  >
-                    {photos.map((photo, idx) => (
-                      <View key={`${photo}-${idx}`} style={styles.photoItem}>
-                        <Image
-                          source={{ uri: getImageUrl(photo) }}
-                          style={styles.profilePhoto}
-                          resizeMode="cover"
-                        />
-                      </View>
-                    ))}
-                  </ScrollView>
-                  {photos.length > 1 && (
-                    <View style={styles.photoPaginationContainer} pointerEvents="none">
-                      {photos.map((_, idx) => (
-                        <View
-                          key={`dot-${idx}`}
-                          style={[
-                            styles.photoPaginationDot,
-                            idx === activePhotoIndex && styles.photoPaginationDotActive,
-                          ]}
-                        />
-                      ))}
+          {/* Photo Section - NOT tappable, only swipeable */}
+          <View style={styles.profilePhotoContainer}>
+            {photos.length > 0 ? (
+              <>
+                <ScrollView
+                  horizontal
+                  pagingEnabled={true}
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.photoScroll}
+                  snapToInterval={photoWidth}
+                  snapToAlignment="start"
+                  decelerationRate="fast"
+                  onMomentumScrollEnd={(event) => {
+                    const offsetX = event.nativeEvent.contentOffset.x;
+                    const index = Math.round(offsetX / photoWidth);
+                    setActivePhotoIndex(Math.min(index, photos.length - 1));
+                  }}
+                  scrollEventThrottle={16}
+                >
+                  {photos.map((photo, idx) => (
+                    <View key={`${photo}-${idx}`} style={styles.photoItem}>
+                      <Image
+                        source={{ uri: getImageUrl(photo) }}
+                        style={styles.profilePhoto}
+                        resizeMode="cover"
+                      />
                     </View>
-                  )}
-                </>
-              ) : (
-                <View style={styles.placeholderPhoto}>
-                  <Text style={styles.placeholderPhotoText}>
-                    {currentProfile.name.charAt(0).toUpperCase()}
-                  </Text>
-                </View>
-              )}
-            </View>
+                  ))}
+                </ScrollView>
+                {photos.length > 1 && (
+                  <View style={styles.photoPaginationContainer} pointerEvents="none">
+                    {photos.map((_, idx) => (
+                      <View
+                        key={`dot-${idx}`}
+                        style={[
+                          styles.photoPaginationDot,
+                          idx === activePhotoIndex && styles.photoPaginationDotActive,
+                        ]}
+                      />
+                    ))}
+                  </View>
+                )}
+              </>
+            ) : (
+              <View style={styles.placeholderPhoto}>
+                <Text style={styles.placeholderPhotoText}>
+                  {currentProfile.name.charAt(0).toUpperCase()}
+                </Text>
+              </View>
+            )}
+          </View>
 
+          {/* Bio Section - Tappable, opens full profile */}
+          <TouchableOpacity 
+            activeOpacity={0.8}
+            onPress={handleProfileTap}
+            style={styles.profileInfoContainer}
+          >
             <View style={styles.profileInfo}>
               <Text style={styles.profileName}>{currentProfile.name}</Text>
               <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
@@ -685,14 +691,14 @@ const styles = StyleSheet.create({
   profileScrollContent: {
     flexGrow: 1,
   },
-  profileTappableArea: {
-    flex: 1,
-  },
   profilePhotoContainer: {
     width: '100%',
     height: screenHeight * 0.4,
     maxHeight: 400,
     position: 'relative',
+  },
+  profileInfoContainer: {
+    backgroundColor: 'rgba(255, 182, 193, 0.9)',
   },
   photoScroll: {
     flexGrow: 0,
@@ -739,7 +745,6 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     padding: 20,
-    backgroundColor: 'rgba(255, 182, 193, 0.9)',
   },
   profileName: {
     fontSize: 24,
