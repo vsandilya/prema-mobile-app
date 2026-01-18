@@ -136,8 +136,20 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
     const photos = user.photos && user.photos.length > 0 ? user.photos : [];
     const activeIndex = activePhotoIndices[user.id] || 0;
 
+    const handleCardTap = () => {
+      navigation.navigate('ProfileView', {
+        user: user,
+        fromLikes: true
+      });
+    };
+
     return (
       <View style={styles.userCard}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={handleCardTap}
+          style={styles.cardTappableArea}
+        >
         <View style={styles.photoContainer}>
           {photos.length > 0 ? (
             <ScrollView
@@ -196,9 +208,10 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
 
         {user.bio && (
           <View style={styles.bioContainer}>
-            <Text style={styles.bioText}>{user.bio}</Text>
+            <Text style={styles.bioText} numberOfLines={2}>{user.bio}</Text>
           </View>
         )}
+        </TouchableOpacity>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -489,6 +502,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 8,
     elevation: 5,
+  },
+  cardTappableArea: {
+    flex: 1,
   },
   photoContainer: {
     position: 'relative',

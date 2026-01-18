@@ -38,6 +38,7 @@ interface ProfileViewScreenProps {
     params: {
       user: UserProfile;
       fromSlotMachine?: boolean;
+      fromLikes?: boolean;
     };
   };
   navigation: any;
@@ -49,7 +50,7 @@ const MODAL_MAX_HEIGHT = screenHeight * 0.9;
 const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
-  const { user, fromSlotMachine } = route.params;
+  const { user, fromSlotMachine, fromLikes } = route.params;
   const { likeUser, passUser, reportUser, blockUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -90,10 +91,12 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           `You and ${user.name} liked each other!`,
           [
             {
-              text: fromSlotMachine ? 'Keep Spinning' : 'Keep Browsing',
+              text: fromSlotMachine ? 'Keep Spinning' : fromLikes ? 'Back to Likes' : 'Keep Browsing',
               onPress: () => {
                 if (fromSlotMachine) {
                   navigation.navigate('Browse');
+                } else if (fromLikes) {
+                  navigation.goBack();
                 } else {
                   navigation.goBack();
                 }
@@ -124,6 +127,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             onPress: () => {
               if (fromSlotMachine) {
                 navigation.navigate('Browse');
+              } else if (fromLikes) {
+                navigation.goBack();
               } else {
                 navigation.goBack();
               }
@@ -147,6 +152,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
       await passUser(user.id);
       if (fromSlotMachine) {
         navigation.navigate('Browse');
+      } else if (fromLikes) {
+        navigation.goBack();
       } else {
         navigation.goBack();
       }
@@ -322,8 +329,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             )}
           </View>
 
-          {/* Action Buttons - Only show if from slot machine */}
-          {fromSlotMachine && (
+          {/* Action Buttons - Show if from slot machine or likes */}
+          {(fromSlotMachine || fromLikes) && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.passButton, isInteracting && styles.buttonDisabled]}
