@@ -51,7 +51,7 @@ const REEL_HEIGHT = 120;
 const SYMBOL_HEIGHT = 40;
 
 const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-  const { spin, getSpinStatus, likeUser, passUser } = useAuth();
+  const { user, spin, getSpinStatus, likeUser, passUser } = useAuth();
   const [spinsRemaining, setSpinsRemaining] = useState(15);
   const [isSpinning, setIsSpinning] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
@@ -84,6 +84,18 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       const savedProfile = await AsyncStorage.getItem('pendingProfile');
       if (savedProfile) {
         const profile = JSON.parse(savedProfile) as UserProfile;
+        
+        // Safety check: If the pending profile is the current user themselves, clear it
+        if (user && profile.id === user.id) {
+          console.warn('[SlotMachine] Safety check: Pending profile matches current user, clearing stale data');
+          await removePendingProfile();
+          setPendingProfile(null);
+          setCurrentProfile(null);
+          setShowProfile(false);
+          profileAnim.setValue(0);
+          return false;
+        }
+        
         setPendingProfile(profile);
         setCurrentProfile(profile);
         setShowProfile(true);
@@ -110,13 +122,14 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   useFocusEffect(
     React.useCallback(() => {
       const initializeScreen = async () => {
-        // First check AsyncStorage for pending profile
+        // First check AsyncStorage for pending profile (includes safety check for self-match)
         const hasPendingProfile = await loadPendingProfile();
         
         // Load spin status
         await loadSpinStatus();
         
         // If no pending profile in AsyncStorage, clear any state
+        // (loadPendingProfile already handles clearing if it's the current user)
         if (!hasPendingProfile) {
           setPendingProfile(null);
           setCurrentProfile(null);
@@ -126,7 +139,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       };
       
       initializeScreen();
-    }, [])
+    }, [user])
   );
 
   const loadSpinStatus = async () => {
