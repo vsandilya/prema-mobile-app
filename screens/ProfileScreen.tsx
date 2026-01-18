@@ -9,7 +9,8 @@ import {
   TextInput,
   TouchableOpacity,
   View,
-  Modal
+  Modal,
+  Switch
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -34,7 +35,8 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   const [isDeleting, setIsDeleting] = useState(false);
   
   // Preferences state
-  const [maxDistance, setMaxDistance] = useState<number>(15); // in miles
+  const [maxDistance, setMaxDistance] = useState<number | null>(15); // in miles, null or -1 means "everywhere"
+  const [searchEverywhere, setSearchEverywhere] = useState<boolean>(false);
   const [minAge, setMinAge] = useState<number>(18);
   const [maxAge, setMaxAge] = useState<number>(80);
   const [preferencesLoaded, setPreferencesLoaded] = useState(false);
@@ -65,7 +67,16 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         const savedFilters = await AsyncStorage.getItem('browseFilters');
         if (savedFilters) {
           const filters = JSON.parse(savedFilters);
-          if (filters.maxDistance !== undefined) setMaxDistance(filters.maxDistance);
+          if (filters.maxDistance !== undefined) {
+            // Check if maxDistance is -1 or null (everywhere)
+            if (filters.maxDistance === -1 || filters.maxDistance === null) {
+              setSearchEverywhere(true);
+              setMaxDistance(null);
+            } else {
+              setSearchEverywhere(false);
+              setMaxDistance(filters.maxDistance);
+            }
+          }
           if (filters.minAge !== undefined) setMinAge(filters.minAge);
           if (filters.maxAge !== undefined) setMaxAge(filters.maxAge);
         }
@@ -81,9 +92,12 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
   // Save preferences to AsyncStorage and optionally to user preferences
   const savePreferences = async () => {
     try {
+      // Convert maxDistance: null or -1 means "everywhere"
+      const distanceToSave = searchEverywhere ? -1 : (maxDistance || 15);
+      
       // Save to AsyncStorage (for backward compatibility with BrowseScreen)
       await AsyncStorage.setItem('browseFilters', JSON.stringify({
-        maxDistance,
+        maxDistance: distanceToSave,
         minAge,
         maxAge,
       }));
@@ -94,7 +108,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         await updateUser({
           preferences: {
             ...currentPreferences,
-            maxDistance,
+            maxDistance: distanceToSave,
             minAge,
             maxAge,
           }
@@ -122,7 +136,7 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
         clearTimeout(debounceTimerRef.current);
       }
     };
-  }, [maxDistance, minAge, maxAge, preferencesLoaded]);
+  }, [maxDistance, searchEverywhere, minAge, maxAge, preferencesLoaded]);
 
   const handleAgeRangeChange = useCallback((low: number, high: number) => {
     setMinAge(Math.round(low));
@@ -377,24 +391,51 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <View style={styles.sectionContent}>
                 {/* Distance Filter */}
                 <View style={styles.preferenceItem}>
-                  <Text style={styles.preferenceLabel}>
-                    📍 Max Distance: {Math.round(maxDistance)} miles
-                  </Text>
-                  <Slider
-                    style={styles.slider}
-                    minimumValue={1}
-                    maximumValue={125}
-                    step={1}
-                    value={maxDistance}
-                    onValueChange={(value) => setMaxDistance(Math.round(value))}
-                    minimumTrackTintColor="#FF6B6B"
-                    maximumTrackTintColor="#E5E5EA"
-                    thumbTintColor="#FF6B6B"
-                  />
-                  <View style={styles.sliderLabels}>
-                    <Text style={styles.sliderLabel}>1 mile</Text>
-                    <Text style={styles.sliderLabel}>125 miles</Text>
+                  <View style={styles.distanceHeader}>
+                    <Text style={styles.preferenceLabel}>
+                      📍 Max Distance
+                    </Text>
+                    <View style={styles.everywhereToggle}>
+                      <Text style={styles.everywhereLabel}>Everywhere</Text>
+                      <Switch
+                        value={searchEverywhere}
+                        onValueChange={(value) => {
+                          setSearchEverywhere(value);
+                          if (value) {
+                            setMaxDistance(null);
+                          } else {
+                            setMaxDistance(maxDistance || 15);
+                          }
+                        }}
+                        trackColor={{ false: '#E5E5EA', true: '#FF6B6B' }}
+                        thumbColor={searchEverywhere ? '#FFFFFF' : '#FFFFFF'}
+                      />
+                    </View>
                   </View>
+                  {searchEverywhere ? (
+                    <Text style={styles.everywhereText}>Searching everywhere</Text>
+                  ) : (
+                    <>
+                      <Text style={styles.distanceValue}>
+                        {maxDistance ? `${Math.round(maxDistance)} miles` : '15 miles'}
+                      </Text>
+                      <Slider
+                        style={styles.slider}
+                        minimumValue={1}
+                        maximumValue={500}
+                        step={1}
+                        value={maxDistance || 15}
+                        onValueChange={(value) => setMaxDistance(Math.round(value))}
+                        minimumTrackTintColor="#FF6B6B"
+                        maximumTrackTintColor="#E5E5EA"
+                        thumbTintColor="#FF6B6B"
+                      />
+                      <View style={styles.sliderLabels}>
+                        <Text style={styles.sliderLabel}>1 mile</Text>
+                        <Text style={styles.sliderLabel}>500 miles</Text>
+                      </View>
+                    </>
+                  )}
                 </View>
 
                 {/* Age Range Filter */}
@@ -912,6 +953,34 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1a1a1a',
     marginBottom: 12,
+  },
+  distanceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  everywhereToggle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  everywhereLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#666',
+  },
+  everywhereText: {
+    fontSize: 14,
+    color: '#666',
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  distanceValue: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1a1a1a',
+    marginBottom: 8,
   },
   slider: {
     width: '100%',
