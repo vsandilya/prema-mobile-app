@@ -69,19 +69,49 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
   // Profile reveal animation
   const profileAnim = useRef(new Animated.Value(0)).current;
 
-  // Save pending profile to AsyncStorage
+  // Get user-specific AsyncStorage key for pending profile
+  const getPendingProfileKey = () => {
+    if (!user?.id) {
+      console.warn('[SlotMachine] No user ID available, cannot create user-specific key');
+      return 'pendingProfile'; // Fallback to legacy key
+    }
+    return `pendingProfile_${user.id}`;
+  };
+
+  // Save pending profile to AsyncStorage with user-specific key
   const savePendingProfile = async (profile: UserProfile) => {
     try {
-      await AsyncStorage.setItem('pendingProfile', JSON.stringify(profile));
+      if (!user?.id) {
+        console.warn('[SlotMachine] Cannot save pending profile: no user ID');
+        return;
+      }
+      const key = getPendingProfileKey();
+      await AsyncStorage.setItem(key, JSON.stringify(profile));
+      console.log(`[SlotMachine] Saved pending profile with key: ${key}`);
     } catch (error) {
       console.error('Error saving pending profile:', error);
     }
   };
 
-  // Load pending profile from AsyncStorage
+  // Load pending profile from AsyncStorage with user-specific key
   const loadPendingProfile = async () => {
     try {
-      const savedProfile = await AsyncStorage.getItem('pendingProfile');
+      if (!user?.id) {
+        console.log('[SlotMachine] No user ID, skipping pending profile load');
+        return false;
+      }
+      
+      const key = getPendingProfileKey();
+      let savedProfile = await AsyncStorage.getItem(key);
+      let loadedFromLegacy = false;
+      
+      // Also check legacy key for backward compatibility if user-specific key not found
+      if (!savedProfile) {
+        const legacyKey = 'pendingProfile';
+        savedProfile = await AsyncStorage.getItem(legacyKey);
+        loadedFromLegacy = !!savedProfile;
+      }
+      
       if (savedProfile) {
         const profile = JSON.parse(savedProfile) as UserProfile;
         
@@ -94,6 +124,13 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
           setShowProfile(false);
           profileAnim.setValue(0);
           return false;
+        }
+        
+        // If loaded from legacy key, migrate to user-specific key
+        if (loadedFromLegacy) {
+          console.log('[SlotMachine] Migrating legacy pending profile to user-specific key');
+          await AsyncStorage.setItem(key, savedProfile);
+          await AsyncStorage.removeItem('pendingProfile');
         }
         
         setPendingProfile(profile);
@@ -109,10 +146,18 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     }
   };
 
-  // Remove pending profile from AsyncStorage
+  // Remove pending profile from AsyncStorage with user-specific key
   const removePendingProfile = async () => {
     try {
+      if (!user?.id) {
+        console.warn('[SlotMachine] Cannot remove pending profile: no user ID');
+        return;
+      }
+      const key = getPendingProfileKey();
+      await AsyncStorage.removeItem(key);
+      // Also remove legacy key if it exists
       await AsyncStorage.removeItem('pendingProfile');
+      console.log(`[SlotMachine] Removed pending profile with key: ${key}`);
     } catch (error) {
       console.error('Error removing pending profile:', error);
     }

@@ -335,6 +335,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const logout = async () => {
     try {
       console.log('[Auth] Logout started');
+      
+      // Clear user-specific pending profile if user exists
+      if (user?.id) {
+        try {
+          await AsyncStorage.removeItem(`pendingProfile_${user.id}`);
+          console.log(`[Auth] Removed pendingProfile_${user.id} from AsyncStorage`);
+        } catch (e) {
+          console.log('[Auth] Error removing user-specific pending profile:', e);
+        }
+      }
+      
+      // Also clear legacy pendingProfile key for backward compatibility
+      try {
+        await AsyncStorage.removeItem('pendingProfile');
+        console.log('[Auth] Removed legacy pendingProfile from AsyncStorage');
+      } catch (e) {
+        console.log('[Auth] Error removing legacy pending profile:', e);
+      }
+      
       await AsyncStorage.removeItem('authToken');
       console.log('[Auth] Removed authToken from AsyncStorage');
       setToken(null);
