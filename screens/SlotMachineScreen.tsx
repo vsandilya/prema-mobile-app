@@ -102,18 +102,28 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       }
       
       const key = getPendingProfileKey();
+      console.log(`[SlotMachine] Checking for pending profile with key: ${key}`);
       let savedProfile = await AsyncStorage.getItem(key);
       let loadedFromLegacy = false;
       
-      // Also check legacy key for backward compatibility if user-specific key not found
-      if (!savedProfile) {
+      if (savedProfile) {
+        console.log(`[SlotMachine] Found pending profile in user-specific key: ${key}`);
+      } else {
+        // Also check legacy key for backward compatibility if user-specific key not found
         const legacyKey = 'pendingProfile';
+        console.log(`[SlotMachine] User-specific key not found, checking legacy key: ${legacyKey}`);
         savedProfile = await AsyncStorage.getItem(legacyKey);
         loadedFromLegacy = !!savedProfile;
+        if (savedProfile) {
+          console.log(`[SlotMachine] Found pending profile in legacy key: ${legacyKey}`);
+        } else {
+          console.log(`[SlotMachine] No pending profile found in either key`);
+        }
       }
       
       if (savedProfile) {
         const profile = JSON.parse(savedProfile) as UserProfile;
+        console.log(`[SlotMachine] Loaded pending profile: id=${profile.id}, name=${profile.name}`);
         
         // Safety check: If the pending profile is the current user themselves, clear it
         if (user && profile.id === user.id) {
@@ -137,11 +147,12 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         setCurrentProfile(profile);
         setShowProfile(true);
         profileAnim.setValue(1);
+        console.log('[SlotMachine] Pending profile loaded and displayed successfully');
         return true;
       }
       return false;
     } catch (error) {
-      console.error('Error loading pending profile:', error);
+      console.error('[SlotMachine] Error loading pending profile:', error);
       return false;
     }
   };
@@ -162,6 +173,34 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       console.error('Error removing pending profile:', error);
     }
   };
+
+  // Clear profile state when user changes (user.id changes)
+  useEffect(() => {
+    if (!user?.id) {
+      // User logged out or not available, clear all state
+      console.log('[SlotMachine] User ID changed to null/undefined, clearing profile state');
+      setPendingProfile(null);
+      setCurrentProfile(null);
+      setShowProfile(false);
+      profileAnim.setValue(0);
+      return;
+    }
+    
+    // Store previous user ID to detect changes
+    const currentUserId = user.id;
+    console.log(`[SlotMachine] User ID is now: ${currentUserId}`);
+    
+    // This effect will run when user.id changes, clearing state for the new user
+    // The useFocusEffect below will then load the correct profile for the new user
+    return () => {
+      // Cleanup: clear state when user changes
+      console.log(`[SlotMachine] User ID changing, clearing profile state`);
+      setPendingProfile(null);
+      setCurrentProfile(null);
+      setShowProfile(false);
+      profileAnim.setValue(0);
+    };
+  }, [user?.id]);
 
   // Load spin status on screen focus
   useFocusEffect(

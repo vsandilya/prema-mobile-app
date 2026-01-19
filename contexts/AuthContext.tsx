@@ -336,30 +336,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('[Auth] Logout started');
       
-      // Clear user-specific pending profile if user exists
-      if (user?.id) {
+      // IMPORTANT: Save userId BEFORE clearing user state
+      const userId = user?.id;
+      console.log(`[Auth] Clearing pending profile for user: ${userId || 'null'}`);
+      
+      // Clear user-specific pending profile if userId exists
+      if (userId) {
         try {
-          await AsyncStorage.removeItem(`pendingProfile_${user.id}`);
-          console.log(`[Auth] Removed pendingProfile_${user.id} from AsyncStorage`);
+          const userSpecificKey = `pendingProfile_${userId}`;
+          await AsyncStorage.removeItem(userSpecificKey);
+          console.log(`[Auth] Removed ${userSpecificKey} from AsyncStorage`);
         } catch (e) {
-          console.log('[Auth] Error removing user-specific pending profile:', e);
+          console.error('[Auth] Error removing user-specific pending profile:', e);
         }
       }
       
-      // Also clear legacy pendingProfile key for backward compatibility
+      // Always clear legacy pendingProfile key for backward compatibility
       try {
         await AsyncStorage.removeItem('pendingProfile');
         console.log('[Auth] Removed legacy pendingProfile from AsyncStorage');
       } catch (e) {
-        console.log('[Auth] Error removing legacy pending profile:', e);
+        console.error('[Auth] Error removing legacy pending profile:', e);
       }
       
-      await AsyncStorage.removeItem('authToken');
-      console.log('[Auth] Removed authToken from AsyncStorage');
+      // Clear auth token
+      try {
+        await AsyncStorage.removeItem('authToken');
+        console.log('[Auth] Removed authToken from AsyncStorage');
+      } catch (e) {
+        console.error('[Auth] Error removing authToken:', e);
+      }
+      
+      // Clear user state AFTER clearing AsyncStorage
       setToken(null);
       setUser(null);
       delete api.defaults.headers.common['Authorization'];
       console.log('[Auth] Cleared token, user, and Authorization header');
+      console.log('[Auth] AsyncStorage cleared successfully');
+      
       // Allow state updates to flush before resetting navigation
       setTimeout(() => {
         try {
@@ -371,7 +385,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
       }, 0);
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error('[Auth] Error during logout:', error);
     }
   };
 
