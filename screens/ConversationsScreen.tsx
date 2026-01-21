@@ -8,15 +8,22 @@ import {
   RefreshControl,
   Alert,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import GradientBackground from '../components/GradientBackground';
+import { API_BASE_URL } from '../config';
 
 interface ConversationSummary {
   user_id: number;
   user_name: string;
+  age?: number;
+  bio?: string;
+  gender?: string;
+  photos?: string[];
+  primary_photo?: number;
   last_message?: string;
   last_message_time?: string;
   unread_count: number;
@@ -45,6 +52,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
   const loadConversations = async () => {
     try {
       const data = await getConversations();
+      console.log('[ConversationsScreen] Loaded conversations:', JSON.stringify(data, null, 2));
       setConversations(data);
     } catch (error: any) {
       console.error('Error loading conversations:', error);
@@ -91,35 +99,74 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
       .slice(0, 2);
   };
 
-  const renderConversation = ({ item }: { item: ConversationSummary }) => (
-    <TouchableOpacity
-      style={styles.conversationItem}
-      onPress={() => navigation.navigate('Chat', { userId: item.user_id, userName: item.user_name })}
-    >
+  const getImageUrl = (photoUrl: string) => {
+    if (!photoUrl) return null;
+    if (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('uploads/')) {
+      return `${API_BASE_URL}/${photoUrl.replace(/^\//, '')}`;
+    }
+    return photoUrl;
+  };
+
+  const renderConversation = ({ item }: { item: ConversationSummary }) => {
+    // Get photo to display (use primary_photo index or first photo)
+    const photos = item.photos || [];
+    const primaryPhotoIndex = item.primary_photo || 0;
+    const displayPhoto = photos.length > 0 ? photos[primaryPhotoIndex] || photos[0] : null;
+    const photoUrl = displayPhoto ? getImageUrl(displayPhoto) : null;
+
+    const handleAvatarPress = () => {
+      console.log('[ConversationsScreen] Navigating to ProfileView with user:', {
+        id: item.user_id,
+        name: item.user_name,
+        age: item.age,
+        bio: item.bio,
+        gender: item.gender,
+        photos: item.photos,
+        primary_photo: item.primary_photo,
+      });
+      navigation.navigate('ProfileView', {
+        user: {
+          id: item.user_id,
+          name: item.user_name,
+          age: item.age || 0,
+          bio: item.bio,
+          gender: item.gender || '',
+          photos: item.photos || [],
+          primary_photo: item.primary_photo || 0,
+        },
+        fromMessages: true
+      });
+    };
+
+    return (
       <TouchableOpacity
-        style={styles.avatarContainer}
-        onPress={() => navigation.navigate('ProfileView', {
-          user: {
-            id: item.user_id,
-            name: item.user_name,
-            age: 0, // Age not available in ConversationSummary
-            gender: '', // Gender not available
-          },
-          fromMessages: true
-        })}
-        activeOpacity={0.7}
+        style={styles.conversationItem}
+        onPress={() => navigation.navigate('Chat', { userId: item.user_id, userName: item.user_name })}
       >
-        <View style={styles.avatar}>
-          <Text style={styles.avatarText}>{getInitials(item.user_name)}</Text>
-        </View>
-        {item.unread_count > 0 && (
-          <View style={styles.unreadBadge}>
-            <Text style={styles.unreadBadgeText}>
-              {item.unread_count > 99 ? '99+' : item.unread_count}
-            </Text>
-          </View>
-        )}
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.avatarContainer}
+          onPress={handleAvatarPress}
+          activeOpacity={0.7}
+        >
+          {photoUrl ? (
+            <Image
+              source={{ uri: photoUrl }}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{getInitials(item.user_name)}</Text>
+            </View>
+          )}
+          {item.unread_count > 0 && (
+            <View style={styles.unreadBadge}>
+              <Text style={styles.unreadBadgeText}>
+                {item.unread_count > 99 ? '99+' : item.unread_count}
+              </Text>
+            </View>
+          )}
+        </TouchableOpacity>
       
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
@@ -143,8 +190,9 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
           </Text>
         </View>
       </View>
-    </TouchableOpacity>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -366,16 +414,30 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  avatarImage: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+  },
   avatarText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: 'bold',
   },
   unreadBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
     backgroundColor: 'rgba(255,107,107,0.85)',
     borderRadius: 12,
     paddingHorizontal: 8,
     paddingVertical: 2,
+    minWidth: 20,
+    height: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
   },
   unreadBadgeText: {
     color: '#fff',
