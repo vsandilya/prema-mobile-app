@@ -53,7 +53,7 @@ const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
   const { user, fromSlotMachine, fromLikes, fromMatches, fromMessages } = route.params;
-  const { likeUser, passUser, reportUser, blockUser } = useAuth();
+  const { likeUser, passUser, reportUser, blockUser, unmatchUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -354,7 +354,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             </View>
           )}
 
-          {/* Message Button - Show if from matches or messages */}
+          {/* Action Buttons - Show if from matches or messages */}
           {(fromMatches || fromMessages) && (
             <View style={styles.messageButtonContainer}>
               <TouchableOpacity
@@ -366,6 +366,14 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                 activeOpacity={0.7}
               >
                 <Text style={styles.messageButtonText}>💬</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.unmatchButton}
+                onPress={handleUnmatch}
+                activeOpacity={0.7}
+                disabled={isInteracting}
+              >
+                <Text style={styles.unmatchButtonText}>✕</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -689,6 +697,8 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
   messageButtonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
     paddingHorizontal: 20,
     paddingVertical: 20,
     paddingBottom: 20,
@@ -696,16 +706,16 @@ const styles = StyleSheet.create({
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: 'rgba(255,255,255,0.15)',
     marginTop: 10,
-    alignItems: 'center',
+    gap: 12,
   },
   messageButton: {
+    flex: 1,
     backgroundColor: '#007AFF',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 30,
-    minWidth: 120,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -717,6 +727,27 @@ const styles = StyleSheet.create({
   messageButtonText: {
     fontSize: 24,
     color: '#FFFFFF',
+  },
+  unmatchButton: {
+    backgroundColor: '#DC3545',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
+    minWidth: 70,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  unmatchButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
