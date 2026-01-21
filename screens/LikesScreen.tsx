@@ -145,73 +145,81 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
 
     return (
       <View style={styles.userCard}>
-        <TouchableOpacity
-          activeOpacity={0.9}
-          onPress={handleCardTap}
-          style={styles.cardTappableArea}
-        >
-        <View style={styles.photoContainer}>
-          {photos.length > 0 ? (
-            <ScrollView
-              horizontal
-              pagingEnabled
-              showsHorizontalScrollIndicator={false}
-              style={styles.photoScroll}
-              onMomentumScrollEnd={(event) => {
-                const offsetX = event.nativeEvent.contentOffset.x;
-                const index = Math.round(offsetX / cardWidth);
-                updatePhotoIndex(user.id, Math.min(index, photos.length - 1));
-              }}
-            >
-              {photos.map((photo, idx) => (
-                <View key={`${photo}-${idx}`} style={styles.photoItem}>
-                  <Image
-                    source={{ uri: getImageUrl(photo) }}
-                    style={styles.userPhoto}
-                    resizeMode="cover"
-                  />
+        <View style={styles.cardContent}>
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleCardTap}
+            style={styles.photoTappableArea}
+          >
+            <View style={styles.photoContainer}>
+              {photos.length > 0 ? (
+                <ScrollView
+                  horizontal
+                  pagingEnabled
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.photoScroll}
+                  onMomentumScrollEnd={(event) => {
+                    const offsetX = event.nativeEvent.contentOffset.x;
+                    const index = Math.round(offsetX / cardWidth);
+                    updatePhotoIndex(user.id, Math.min(index, photos.length - 1));
+                  }}
+                >
+                  {photos.map((photo, idx) => (
+                    <View key={`${photo}-${idx}`} style={styles.photoItem}>
+                      <Image
+                        source={{ uri: getImageUrl(photo) }}
+                        style={styles.userPhoto}
+                        resizeMode="cover"
+                      />
+                    </View>
+                  ))}
+                </ScrollView>
+              ) : (
+                <View style={[styles.photoItem, styles.placeholderPhoto]}>
+                  <Text style={styles.placeholderPhotoText}>
+                    {user.name.charAt(0).toUpperCase()}
+                  </Text>
                 </View>
-              ))}
-            </ScrollView>
-          ) : (
-            <View style={[styles.photoItem, styles.placeholderPhoto]}>
-              <Text style={styles.placeholderPhotoText}>
-                {user.name.charAt(0).toUpperCase()}
-              </Text>
-            </View>
-          )}
+              )}
 
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>{user.name}</Text>
-            <Text style={styles.userAge}>{user.age} years old</Text>
-            {formatDistance(user.distance_km) && (
-              <Text style={styles.userDistance}>
-                📍 {formatDistance(user.distance_km)}
-              </Text>
+              {photos.length > 1 && (
+                <View style={styles.photoPaginationContainer} pointerEvents="none">
+                  {photos.map((_, idx) => (
+                    <View
+                      key={`dot-${idx}`}
+                      style={[
+                        styles.photoPaginationDot,
+                        idx === activeIndex && styles.photoPaginationDotActive,
+                      ]}
+                    />
+                  ))}
+                </View>
+              )}
+            </View>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            activeOpacity={0.9}
+            onPress={handleCardTap}
+            style={styles.infoTappableArea}
+          >
+            <View style={styles.userInfo}>
+              <Text style={styles.userName}>{user.name}</Text>
+              <Text style={styles.userAge}>{user.age} years old</Text>
+              {formatDistance(user.distance_km) && (
+                <Text style={styles.userDistance}>
+                  📍 {formatDistance(user.distance_km)}
+                </Text>
+              )}
+            </View>
+
+            {user.bio && (
+              <View style={styles.bioContainer}>
+                <Text style={styles.bioText} numberOfLines={2}>{user.bio}</Text>
+              </View>
             )}
-          </View>
-
-          {photos.length > 1 && (
-            <View style={styles.photoPaginationContainer} pointerEvents="none">
-              {photos.map((_, idx) => (
-                <View
-                  key={`dot-${idx}`}
-                  style={[
-                    styles.photoPaginationDot,
-                    idx === activeIndex && styles.photoPaginationDotActive,
-                  ]}
-                />
-              ))}
-            </View>
-          )}
+          </TouchableOpacity>
         </View>
-
-        {user.bio && (
-          <View style={styles.bioContainer}>
-            <Text style={styles.bioText} numberOfLines={2}>{user.bio}</Text>
-          </View>
-        )}
-        </TouchableOpacity>
 
         <View style={styles.actionButtons}>
           <TouchableOpacity
@@ -503,7 +511,13 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 5,
   },
-  cardTappableArea: {
+  cardContent: {
+    flex: 1,
+  },
+  photoTappableArea: {
+    flex: 0,
+  },
+  infoTappableArea: {
     flex: 1,
   },
   photoContainer: {

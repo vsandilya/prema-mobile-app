@@ -39,6 +39,8 @@ interface ProfileViewScreenProps {
       user: UserProfile;
       fromSlotMachine?: boolean;
       fromLikes?: boolean;
+      fromMatches?: boolean;
+      fromMessages?: boolean;
     };
   };
   navigation: any;
@@ -50,7 +52,7 @@ const MODAL_MAX_HEIGHT = screenHeight * 0.9;
 const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
-  const { user, fromSlotMachine, fromLikes } = route.params;
+  const { user, fromSlotMachine, fromLikes, fromMatches, fromMessages } = route.params;
   const { likeUser, passUser, reportUser, blockUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -329,8 +331,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             )}
           </View>
 
-          {/* Action Buttons - Show if from slot machine or likes */}
-          {(fromSlotMachine || fromLikes) && (
+          {/* Action Buttons - Show if from slot machine or likes, but NOT from matches or messages */}
+          {(fromSlotMachine || fromLikes) && !fromMatches && !fromMessages && (
             <View style={styles.actionButtons}>
               <TouchableOpacity
                 style={[styles.passButton, isInteracting && styles.buttonDisabled]}
@@ -348,6 +350,22 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                 activeOpacity={0.7}
               >
                 <Text style={styles.likeButtonText}>❤️</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+
+          {/* Message Button - Show if from matches or messages */}
+          {(fromMatches || fromMessages) && (
+            <View style={styles.messageButtonContainer}>
+              <TouchableOpacity
+                style={styles.messageButton}
+                onPress={() => navigation.navigate('Chat', { 
+                  userId: user.id, 
+                  userName: user.name 
+                })}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.messageButtonText}>💬</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -669,6 +687,36 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  messageButtonContainer: {
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    paddingBottom: 20,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(255,255,255,0.15)',
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  messageButton: {
+    backgroundColor: '#007AFF',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 30,
+    minWidth: 120,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  messageButtonText: {
+    fontSize: 24,
+    color: '#FFFFFF',
   },
   modalOverlay: {
     flex: 1,

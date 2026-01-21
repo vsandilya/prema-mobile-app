@@ -96,7 +96,19 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
       style={styles.conversationItem}
       onPress={() => navigation.navigate('Chat', { userId: item.user_id, userName: item.user_name })}
     >
-      <View style={styles.avatarContainer}>
+      <TouchableOpacity
+        style={styles.avatarContainer}
+        onPress={() => navigation.navigate('ProfileView', {
+          user: {
+            id: item.user_id,
+            name: item.user_name,
+            age: 0, // Age not available in ConversationSummary
+            gender: '', // Gender not available
+          },
+          fromMessages: true
+        })}
+        activeOpacity={0.7}
+      >
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{getInitials(item.user_name)}</Text>
         </View>
@@ -107,7 +119,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
             </Text>
           </View>
         )}
-      </View>
+      </TouchableOpacity>
       
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>

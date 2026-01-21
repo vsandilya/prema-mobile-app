@@ -124,15 +124,22 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   };
 
   const renderMatchCard = ({ item }: { item: MatchResponse }) => (
-    <TouchableOpacity
-      style={styles.matchCard}
-      onPress={() => navigation.navigate('Chat', { 
-        userId: item.id, 
-        userName: item.name 
-      })}
-      activeOpacity={0.8}
-    >
-      <View style={styles.photoContainer}>
+    <View style={styles.matchCard}>
+      <TouchableOpacity
+        style={styles.photoContainer}
+        onPress={() => navigation.navigate('ProfileView', { 
+          user: {
+            id: item.id,
+            name: item.name,
+            age: item.age,
+            bio: item.bio,
+            photos: item.photos,
+            gender: '', // Gender not included in MatchResponse, will be empty
+          },
+          fromMatches: true
+        })}
+        activeOpacity={0.8}
+      >
         {item.photos && item.photos.length > 0 ? (
           <Image
             source={{ uri: getImageUrl(item.photos[0]) }}
@@ -150,7 +157,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         <View style={styles.matchBadge}>
           <Text style={styles.matchBadgeText}>💕</Text>
         </View>
-      </View>
+      </TouchableOpacity>
       
       <View style={styles.matchInfo}>
         <View style={styles.matchHeader}>
@@ -169,8 +176,18 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         <Text style={styles.matchDate}>
           {formatMatchDate(item.matched_at)}
         </Text>
+        <TouchableOpacity
+          style={styles.messageIconButton}
+          onPress={() => navigation.navigate('Chat', { 
+            userId: item.id, 
+            userName: item.name 
+          })}
+          activeOpacity={0.7}
+        >
+          <Text style={styles.messageIconText}>💬</Text>
+        </TouchableOpacity>
       </View>
-    </TouchableOpacity>
+    </View>
   );
 
   if (isLoading) {
@@ -475,6 +492,19 @@ const styles = StyleSheet.create({
     color: '#FF3B30',
     fontSize: 16,
     fontWeight: '600',
+  },
+  messageIconButton: {
+    marginTop: 8,
+    backgroundColor: 'rgba(0, 122, 255, 0.8)',
+    borderRadius: 20,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  messageIconText: {
+    fontSize: 18,
+    color: '#FFFFFF',
   },
 });
 

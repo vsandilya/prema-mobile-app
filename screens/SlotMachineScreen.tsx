@@ -555,7 +555,6 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                   {currentProfile.bio}
                 </Text>
               )}
-              <Text style={styles.tapHint}>Tap to view full profile</Text>
             </View>
           </TouchableOpacity>
         </ScrollView>
