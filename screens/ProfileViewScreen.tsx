@@ -276,6 +276,39 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     }
   };
 
+  const handleUnmatch = () => {
+    Alert.alert(
+      'Unmatch',
+      `Are you sure you want to unmatch with ${user.name}? This will remove them from your matches and delete your conversation. This cannot be undone.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Unmatch',
+          style: 'destructive',
+          onPress: async () => {
+            if (isInteracting) return;
+            setIsInteracting(true);
+            try {
+              await unmatchUser(user.id);
+              Alert.alert('Unmatched', `You unmatched with ${user.name}.`);
+              // Navigate back to Messages if coming from messages, otherwise go back
+              if (fromMessages) {
+                navigation.navigate('Conversations');
+              } else {
+                navigation.goBack();
+              }
+            } catch (error: any) {
+              console.error('Error unmatching user:', error);
+              Alert.alert('Error', error.message || 'Failed to unmatch. Please try again.');
+            } finally {
+              setIsInteracting(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   return (
     <GradientBackground>
       <SafeAreaView style={styles.container} edges={['top']}>
