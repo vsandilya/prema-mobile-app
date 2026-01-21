@@ -115,27 +115,52 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
     const photoUrl = displayPhoto ? getImageUrl(displayPhoto) : null;
 
     const handleAvatarPress = () => {
-      console.log('[ConversationsScreen] Navigating to ProfileView with user:', {
-        id: item.user_id,
-        name: item.user_name,
-        age: item.age,
-        bio: item.bio,
-        gender: item.gender,
-        photos: item.photos,
-        primary_photo: item.primary_photo,
-      });
-      navigation.navigate('ProfileView', {
-        user: {
+      try {
+        console.log('[ConversationsScreen] handleAvatarPress called');
+        console.log('[ConversationsScreen] Item data:', {
+          user_id: item.user_id,
+          user_name: item.user_name,
+          age: item.age,
+          bio: item.bio,
+          gender: item.gender,
+          photos: item.photos,
+          primary_photo: item.primary_photo,
+        });
+
+        // Validate required fields
+        if (!item.user_id) {
+          console.error('[ConversationsScreen] Missing user_id');
+          Alert.alert('Error', 'Unable to view profile: Missing user ID');
+          return;
+        }
+
+        if (!item.user_name) {
+          console.error('[ConversationsScreen] Missing user_name');
+          Alert.alert('Error', 'Unable to view profile: Missing user name');
+          return;
+        }
+
+        // Prepare user object with all required fields and defaults
+        const userProfile = {
           id: item.user_id,
           name: item.user_name,
           age: item.age || 0,
-          bio: item.bio,
+          bio: item.bio || undefined,
           gender: item.gender || '',
-          photos: item.photos || [],
+          photos: Array.isArray(item.photos) ? item.photos : [],
           primary_photo: item.primary_photo || 0,
-        },
-        fromMessages: true
-      });
+        };
+
+        console.log('[ConversationsScreen] Navigating to ProfileView with user:', userProfile);
+
+        navigation.navigate('ProfileView', {
+          user: userProfile,
+          fromMessages: true
+        });
+      } catch (error: any) {
+        console.error('[ConversationsScreen] Error in handleAvatarPress:', error);
+        Alert.alert('Error', 'Failed to open profile. Please try again.');
+      }
     };
 
     return (

@@ -52,7 +52,48 @@ const MODAL_MAX_HEIGHT = screenHeight * 0.9;
 const MODAL_CONTENT_HEIGHT = Math.min(screenHeight * 0.85, 600);
 
 const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation }) => {
+  // Add safety checks for route params
+  if (!route?.params) {
+    console.error('[ProfileViewScreen] Missing route params');
+    return (
+      <GradientBackground>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <Text style={{ color: '#fff', fontSize: 16 }}>Error: Missing profile data</Text>
+            <TouchableOpacity
+              style={{ marginTop: 20, padding: 10, backgroundColor: '#007AFF', borderRadius: 8 }}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={{ color: '#fff' }}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
   const { user, fromSlotMachine, fromLikes, fromMatches, fromMessages } = route.params;
+
+  // Validate user object
+  if (!user || !user.id || !user.name) {
+    console.error('[ProfileViewScreen] Invalid user data:', user);
+    return (
+      <GradientBackground>
+        <SafeAreaView style={styles.container} edges={['top']}>
+          <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+            <Text style={{ color: '#fff', fontSize: 16 }}>Error: Invalid profile data</Text>
+            <TouchableOpacity
+              style={{ marginTop: 20, padding: 10, backgroundColor: '#007AFF', borderRadius: 8 }}
+              onPress={() => navigation.goBack()}
+            >
+              <Text style={{ color: '#fff' }}>Go Back</Text>
+            </TouchableOpacity>
+          </View>
+        </SafeAreaView>
+      </GradientBackground>
+    );
+  }
+
   const { likeUser, passUser, reportUser, blockUser, unmatchUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -71,7 +112,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     { value: 'other', label: 'Other' },
   ];
 
-  const photos = user.photos && user.photos.length > 0 ? user.photos : [];
+  // Ensure photos is always an array
+  const photos = (user.photos && Array.isArray(user.photos) && user.photos.length > 0) ? user.photos : [];
 
   const getImageUrl = (photoUrl: string) => {
     if (photoUrl.startsWith('/uploads/') || photoUrl.startsWith('uploads/')) {
