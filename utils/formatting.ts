@@ -12,6 +12,9 @@ export const formatDistance = (distanceKm?: number): string | null => {
     return "Less than a mile away";
   }
   
-  return `${Math.round(distanceMiles)} miles away`;
+  // Round to 1 decimal place
+  const roundedMiles = Math.round(distanceMiles * 10) / 10;
+  
+  return `${roundedMiles} miles away`;
 };
 

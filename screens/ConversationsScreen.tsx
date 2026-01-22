@@ -24,6 +24,8 @@ interface ConversationSummary {
   gender?: string;
   photos?: string[];
   primary_photo?: number;
+  location_latitude?: number;
+  location_longitude?: number;
   last_message?: string;
   last_message_time?: string;
   unread_count: number;
@@ -149,6 +151,8 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
           gender: item.gender || '',
           photos: Array.isArray(item.photos) ? item.photos : [],
           primary_photo: item.primary_photo || 0,
+          location_latitude: item.location_latitude,
+          location_longitude: item.location_longitude,
         };
 
         console.log('[ConversationsScreen] Navigating to ProfileView with user:', userProfile);

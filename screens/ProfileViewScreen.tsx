@@ -94,7 +94,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     );
   }
 
-  const { likeUser, passUser, reportUser, blockUser, unmatchUser } = useAuth();
+  const { user: currentUser, likeUser, passUser, reportUser, blockUser, unmatchUser } = useAuth();
   const [activePhotoIndex, setActivePhotoIndex] = useState(0);
   const [isInteracting, setIsInteracting] = useState(false);
   const [showReportModal, setShowReportModal] = useState(false);
@@ -121,6 +121,33 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
     }
     return photoUrl;
   };
+
+  // Calculate distance if location data is available
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    const R = 6371; // Earth's radius in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Get current user location and calculate distance if needed
+  let distanceKm = user.distance_km;
+  
+  // If distance is not provided but location data is available, calculate it
+  if (!distanceKm && fromMessages && currentUser?.location_latitude && currentUser?.location_longitude && 
+      user.location_latitude && user.location_longitude) {
+    distanceKm = calculateDistance(
+      currentUser.location_latitude,
+      currentUser.location_longitude,
+      user.location_latitude,
+      user.location_longitude
+    );
+  }
 
 
   const handleLike = async () => {
@@ -395,9 +422,9 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             <Text style={styles.userName}>{user.name}</Text>
             <Text style={styles.userAge}>{user.age} years old</Text>
             
-            {formatDistance(user.distance_km) && (
+            {formatDistance(distanceKm) && (
               <Text style={styles.userDistance}>
-                📍 {formatDistance(user.distance_km)}
+                📍 {formatDistance(distanceKm)}
               </Text>
             )}
 
@@ -791,6 +818,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 15,
     borderRadius: 30,
+    minWidth: 70,
     alignItems: 'center',
     justifyContent: 'center',
     shadowColor: '#000',
@@ -802,8 +830,10 @@ const styles = StyleSheet.create({
   messageButtonText: {
     fontSize: 24,
     color: '#FFFFFF',
+    fontWeight: 'bold',
   },
   unmatchButton: {
+    flex: 1,
     backgroundColor: '#DC3545',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
