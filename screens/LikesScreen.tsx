@@ -12,6 +12,7 @@ import {
   ScrollView,
   Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
@@ -195,6 +196,21 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
                   ))}
                 </View>
               )}
+
+              <View style={styles.photoTextOverlay} pointerEvents="none">
+                <LinearGradient
+                  colors={['transparent', 'rgba(0,0,0,0.5)', 'rgba(0,0,0,0.85)']}
+                  style={styles.photoTextGradient}
+                >
+                  <Text style={styles.userName}>{getDisplayName(user.name)}</Text>
+                  <Text style={styles.userAge}>{user.age} years old</Text>
+                  {formatDistance(user.distance_km) ? (
+                    <Text style={styles.userDistance}>
+                      📍 {formatDistance(user.distance_km)}
+                    </Text>
+                  ) : null}
+                </LinearGradient>
+              </View>
             </View>
           </TouchableOpacity>
 
@@ -203,21 +219,11 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
             onPress={handleCardTap}
             style={styles.infoTappableArea}
           >
-            <View style={styles.userInfo}>
-              <Text style={styles.userName}>{getDisplayName(user.name)}</Text>
-              <Text style={styles.userAge}>{user.age} years old</Text>
-              {formatDistance(user.distance_km) && (
-                <Text style={styles.userDistance}>
-                  📍 {formatDistance(user.distance_km)}
-                </Text>
-              )}
-            </View>
-
-            {user.bio && (
+            {user.bio ? (
               <View style={styles.bioContainer}>
                 <Text style={styles.bioText} numberOfLines={2}>{user.bio}</Text>
               </View>
-            )}
+            ) : null}
           </TouchableOpacity>
         </View>
 
@@ -545,32 +551,39 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
   },
-  userInfo: {
+  photoTextOverlay: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
-    padding: 20,
+    minHeight: 100,
+  },
+  photoTextGradient: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 24,
+    paddingBottom: 14,
   },
   userName: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   userAge: {
-    fontSize: 18,
-    color: '#fff',
-    marginBottom: 4,
+    fontSize: 16,
+    color: 'rgba(255,255,255,0.95)',
+    marginBottom: 6,
   },
   userDistance: {
     fontSize: 14,
-    color: '#fff',
+    color: 'rgba(255,255,255,0.9)',
+    marginBottom: 0,
   },
   photoPaginationContainer: {
     position: 'absolute',
-    bottom: 80,
+    bottom: 110,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -591,8 +604,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   bioContainer: {
-    padding: 20,
-    paddingTop: 15,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 16,
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   bioText: {
@@ -604,8 +618,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingHorizontal: 20,
-    paddingVertical: 20,
-    paddingBottom: 30,
+    paddingVertical: 16,
+    paddingBottom: 24,
     backgroundColor: 'rgba(0,0,0,0.25)',
     gap: 12,
   },
