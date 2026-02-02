@@ -336,28 +336,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       console.log('[Auth] Logout started');
       
-      // IMPORTANT: Save userId BEFORE clearing user state
-      const userId = user?.id;
-      console.log(`[Auth] Clearing pending profile for user: ${userId || 'null'}`);
-      
-      // Clear user-specific pending profile if userId exists
-      if (userId) {
-        try {
-          const userSpecificKey = `pendingProfile_${userId}`;
-          await AsyncStorage.removeItem(userSpecificKey);
-          console.log(`[Auth] Removed ${userSpecificKey} from AsyncStorage`);
-        } catch (e) {
-          console.error('[Auth] Error removing user-specific pending profile:', e);
-        }
-      }
-      
-      // Always clear legacy pendingProfile key for backward compatibility
-      try {
-        await AsyncStorage.removeItem('pendingProfile');
-        console.log('[Auth] Removed legacy pendingProfile from AsyncStorage');
-      } catch (e) {
-        console.error('[Auth] Error removing legacy pending profile:', e);
-      }
+      // Do NOT clear pendingProfile / pendingProfile_${userId} on logout.
+      // The pending slot-machine profile is kept so that when the user logs
+      // back in, they see the same pending match and must Pass/Like before
+      // spinning again (avoids "wasting" a spin). SlotMachineScreen uses
+      // user-specific keys (pendingProfile_${userId}) so each user only
+      // sees their own pending profile on load.
       
       // Clear auth token
       try {
