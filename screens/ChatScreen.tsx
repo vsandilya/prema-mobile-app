@@ -14,6 +14,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { useAuth } from '../contexts/AuthContext';
+import { getDisplayName } from '../utils/formatting';
 import { useFocusEffect } from '@react-navigation/native';
 
 interface Message {
@@ -192,7 +193,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
         >
           <Text style={styles.backButtonText}>← Back</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>{userName}</Text>
+        <Text style={styles.headerTitle}>{getDisplayName(userName)}</Text>
       </View>
 
       <KeyboardAvoidingView 

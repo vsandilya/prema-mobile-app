@@ -17,14 +17,14 @@ import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import GradientBackground from '../components/GradientBackground';
-import { formatDistance } from '../utils/formatting';
+import { formatDistance, getDisplayName } from '../utils/formatting';
 
 interface UserProfile {
   id: number;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
@@ -99,7 +99,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
         setMatchedUser(user);
         setShowMatchModal(true);
       } else {
-        Alert.alert('Liked!', `You liked ${user.name} back!`);
+        Alert.alert('Liked!', `You liked ${getDisplayName(user.name)} back!`);
       }
     } catch (error: any) {
       console.error('Error liking user:', error);
@@ -177,7 +177,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
               ) : (
                 <View style={[styles.photoItem, styles.placeholderPhoto]}>
                   <Text style={styles.placeholderPhotoText}>
-                    {user.name.charAt(0).toUpperCase()}
+                    {getDisplayName(user.name).charAt(0).toUpperCase()}
                   </Text>
                 </View>
               )}
@@ -204,7 +204,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
             style={styles.infoTappableArea}
           >
             <View style={styles.userInfo}>
-              <Text style={styles.userName}>{user.name}</Text>
+              <Text style={styles.userName}>{getDisplayName(user.name)}</Text>
               <Text style={styles.userAge}>{user.age} years old</Text>
               {formatDistance(user.distance_km) && (
                 <Text style={styles.userDistance}>
@@ -253,7 +253,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
         <View style={styles.matchModal}>
           <Text style={styles.matchTitle}>🎉 It's a Match!</Text>
           <Text style={styles.matchSubtitle}>
-            You and {matchedUser?.name} liked each other!
+            You and {getDisplayName(matchedUser?.name)} liked each other!
           </Text>
           
           <View style={styles.matchActions}>
@@ -273,7 +273,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
                 setShowMatchModal(false);
                 navigation.navigate('Chat', { 
                   userId: matchedUser?.id, 
-                  userName: matchedUser?.name 
+                  userName: getDisplayName(matchedUser?.name)
                 });
               }}
             >

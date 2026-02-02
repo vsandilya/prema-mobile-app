@@ -19,14 +19,14 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import GradientBackground from '../components/GradientBackground';
 import { useAuth } from '../contexts/AuthContext';
 import { API_BASE_URL } from '../config';
-import { formatDistance } from '../utils/formatting';
+import { formatDistance, getDisplayName } from '../utils/formatting';
 
 interface UserProfile {
   id: number;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
@@ -74,8 +74,8 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
 
   const { user, fromSlotMachine, fromLikes, fromMatches, fromMessages } = route.params;
 
-  // Validate user object
-  if (!user || !user.id || !user.name) {
+  // Validate user object (name is optional per Guideline 5.1.1)
+  if (!user || !user.id) {
     console.error('[ProfileViewScreen] Invalid user data:', user);
     return (
       <GradientBackground>
@@ -159,7 +159,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
       if (response.is_match) {
         Alert.alert(
           '🎉 It\'s a Match!',
-          `You and ${user.name} liked each other!`,
+          `You and ${getDisplayName(user.name)} liked each other!`,
           [
             {
               text: fromSlotMachine ? 'Keep Spinning' : fromLikes ? 'Back to Likes' : 'Keep Browsing',
@@ -184,7 +184,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                 setTimeout(() => {
                   navigation.navigate('Chat', {
                     userId: user.id,
-                    userName: user.name,
+                    userName: getDisplayName(user.name),
                   });
                 }, 100);
               },
@@ -192,7 +192,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
           ]
         );
       } else {
-        Alert.alert('Liked!', `You liked ${user.name}`, [
+        Alert.alert('Liked!', `You liked ${getDisplayName(user.name)}`, [
           { 
             text: 'OK', 
             onPress: () => {
@@ -306,7 +306,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
   const handleUnmatch = () => {
     Alert.alert(
       'Unmatch',
-      `Are you sure you want to unmatch with ${user.name}? This will remove them from your matches and delete your conversation. This cannot be undone.`,
+      `Are you sure you want to unmatch with ${getDisplayName(user.name)}? This will remove them from your matches and delete your conversation. This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -317,7 +317,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             setIsInteracting(true);
             try {
               await unmatchUser(user.id);
-              Alert.alert('Unmatched', `You unmatched with ${user.name}.`);
+              Alert.alert('Unmatched', `You unmatched with ${getDisplayName(user.name)}.`);
               // Navigate back to Messages if coming from messages, otherwise go back
               if (fromMessages) {
                 navigation.navigate('Conversations');
@@ -397,7 +397,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
             ) : (
               <View style={[styles.photoItem, styles.placeholderPhoto]}>
                 <Text style={styles.placeholderPhotoText}>
-                  {user.name.charAt(0).toUpperCase()}
+                  {getDisplayName(user.name).charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}
@@ -419,7 +419,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
 
           {/* User Details - Below photos */}
           <View style={styles.detailsContainer}>
-            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userName}>{getDisplayName(user.name)}</Text>
             <Text style={styles.userAge}>{user.age} years old</Text>
             
             {formatDistance(distanceKm) && (
@@ -463,7 +463,7 @@ const ProfileViewScreen: React.FC<ProfileViewScreenProps> = ({ route, navigation
                 style={styles.messageButton}
                 onPress={() => navigation.navigate('Chat', { 
                   userId: user.id, 
-                  userName: user.name 
+                  userName: getDisplayName(user.name)
                 })}
                 activeOpacity={0.7}
               >

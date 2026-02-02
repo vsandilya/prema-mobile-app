@@ -19,6 +19,7 @@ import Slider from '@react-native-community/slider';
 import RangeSlider from 'rn-range-slider';
 import { API_BASE_URL } from '../config';
 import GradientBackground from '../components/GradientBackground';
+import { getDisplayName } from '../utils/formatting';
 import { useAuth } from '../contexts/AuthContext';
 
 interface ProfileScreenProps {
@@ -339,15 +340,17 @@ const ProfileScreen: React.FC<ProfileScreenProps> = ({ navigation }) => {
               <View style={styles.avatarContainer}>
                 <View style={styles.avatar}>
                   <Text style={styles.avatarText}>
-                    {user.name.charAt(0).toUpperCase()}
+                    {getDisplayName(user.name).charAt(0).toUpperCase()}
                   </Text>
                 </View>
               </View>
 
               <View style={styles.userInfo}>
-                <Text style={styles.name}>{user.name}</Text>
+                <Text style={styles.name}>{getDisplayName(user.name)}</Text>
                 <Text style={styles.age}>{user.age} years old</Text>
-                <Text style={styles.gender}>{user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}</Text>
+                {user.gender && (
+                  <Text style={styles.gender}>{user.gender.charAt(0).toUpperCase() + user.gender.slice(1)}</Text>
+                )}
                 <Text style={styles.email}>{user.email}</Text>
               </View>
             </View>

@@ -20,15 +20,15 @@ import { API_BASE_URL } from '../config';
 import { useAuth } from '../contexts/AuthContext';
 import { useLocationAutoUpdate } from '../hooks/useLocationAutoUpdate';
 import GradientBackground from '../components/GradientBackground';
-import { formatDistance } from '../utils/formatting';
+import { formatDistance, getDisplayName } from '../utils/formatting';
 
 
 interface UserProfile {
   id: number;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
@@ -403,7 +403,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           ) : (
             <View style={[styles.photoItem, styles.placeholderPhoto]}>
               <Text style={styles.placeholderPhotoText}>
-                {user.name.charAt(0).toUpperCase()}
+                {getDisplayName(user.name).charAt(0).toUpperCase()}
               </Text>
             </View>
           )}
@@ -430,7 +430,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
           activeOpacity={0.8}
         >
           <View style={styles.userInfoContent}>
-            <Text style={styles.userName}>{user.name}</Text>
+            <Text style={styles.userName}>{getDisplayName(user.name)}</Text>
             <Text style={styles.userAge}>{user.age} years old</Text>
             {formatDistance(user.distance_km) && (
               <Text style={styles.userDistance}>
@@ -478,7 +478,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
         <View style={styles.matchModal}>
           <Text style={styles.matchTitle}>🎉 It's a Match!</Text>
           <Text style={styles.matchSubtitle}>
-            You and {matchedUser?.name} liked each other!
+            You and {getDisplayName(matchedUser?.name)} liked each other!
           </Text>
           
           <View style={styles.matchActions}>
@@ -495,7 +495,7 @@ const BrowseScreen: React.FC<BrowseScreenProps> = ({ navigation }) => {
                 setShowMatchModal(false);
                 navigation.navigate('Chat', { 
                   userId: matchedUser?.id, 
-                  userName: matchedUser?.name 
+                  userName: getDisplayName(matchedUser?.name)
                 });
               }}
             >

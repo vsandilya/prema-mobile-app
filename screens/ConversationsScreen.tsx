@@ -14,6 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import GradientBackground from '../components/GradientBackground';
+import { getDisplayName } from '../utils/formatting';
 import { API_BASE_URL } from '../config';
 
 interface ConversationSummary {
@@ -93,8 +94,9 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
+  const getInitials = (name: string | undefined) => {
+    const displayName = getDisplayName(name);
+    return displayName
       .split(' ')
       .map(word => word.charAt(0).toUpperCase())
       .join('')
@@ -136,13 +138,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
           return;
         }
 
-        if (!item.user_name) {
-          console.error('[ConversationsScreen] Missing user_name');
-          Alert.alert('Error', 'Unable to view profile: Missing user name');
-          return;
-        }
-
-        // Prepare user object with all required fields and defaults
+        // Prepare user object with all required fields and defaults (name is optional per Guideline 5.1.1)
         const userProfile = {
           id: item.user_id,
           name: item.user_name,
@@ -170,7 +166,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
     return (
       <TouchableOpacity
         style={styles.conversationItem}
-        onPress={() => navigation.navigate('Chat', { userId: item.user_id, userName: item.user_name })}
+        onPress={() => navigation.navigate('Chat', { userId: item.user_id, userName: getDisplayName(item.user_name) })}
       >
         <TouchableOpacity
           style={styles.avatarContainer}
@@ -199,7 +195,7 @@ const ConversationsScreen: React.FC<ConversationsScreenProps> = ({ navigation })
       
       <View style={styles.conversationContent}>
         <View style={styles.conversationHeader}>
-          <Text style={styles.userName}>{item.user_name}</Text>
+          <Text style={styles.userName}>{getDisplayName(item.user_name)}</Text>
           {item.last_message_time && (
             <Text style={styles.timestamp}>
               {formatTimestamp(item.last_message_time)}

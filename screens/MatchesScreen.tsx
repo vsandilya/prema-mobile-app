@@ -16,10 +16,11 @@ import { useAuth } from '../contexts/AuthContext';
 import { useFocusEffect } from '@react-navigation/native';
 import { API_BASE_URL } from '../config';
 import GradientBackground from '../components/GradientBackground';
+import { getDisplayName } from '../utils/formatting';
 
 interface MatchResponse {
   id: number;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
   photos?: string[];
@@ -102,7 +103,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
   const confirmUnmatch = (match: MatchResponse) => {
     Alert.alert(
       'Unmatch',
-      `Are you sure you want to unmatch with ${match.name}? This cannot be undone.`,
+      `Are you sure you want to unmatch with ${getDisplayName(match.name)}? This cannot be undone.`,
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -112,7 +113,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
             try {
               const response = await unmatchUser(match.id);
               setMatches(prevMatches => prevMatches.filter(m => m.id !== match.id));
-              Alert.alert('Unmatched', response?.message || `You unmatched with ${match.name}.`);
+              Alert.alert('Unmatched', response?.message || `You unmatched with ${getDisplayName(match.name)}.`);
             } catch (error: any) {
               console.error('Error unmatching user:', error);
               Alert.alert('Error', error.message || 'Failed to unmatch. Please try again.');
@@ -149,7 +150,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
         ) : (
           <View style={styles.placeholderPhoto}>
             <Text style={styles.placeholderPhotoText}>
-              {item.name.charAt(0).toUpperCase()}
+              {getDisplayName(item.name).charAt(0).toUpperCase()}
             </Text>
           </View>
         )}
@@ -162,7 +163,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
       <View style={styles.matchInfo}>
         <View style={styles.matchHeader}>
           <Text style={styles.matchName} numberOfLines={1}>
-            {item.name}
+            {getDisplayName(item.name)}
           </Text>
           <TouchableOpacity
             style={styles.unmatchButton}
@@ -180,7 +181,7 @@ const MatchesScreen: React.FC<MatchesScreenProps> = ({ navigation }) => {
           style={styles.messageIconButton}
           onPress={() => navigation.navigate('Chat', { 
             userId: item.id, 
-            userName: item.name 
+            userName: getDisplayName(item.name)
           })}
           activeOpacity={0.7}
         >

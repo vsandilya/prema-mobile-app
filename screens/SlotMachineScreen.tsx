@@ -17,16 +17,16 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useAuth } from '../contexts/AuthContext';
 import GradientBackground from '../components/GradientBackground';
 import { API_BASE_URL } from '../config';
-import { formatDistance } from '../utils/formatting';
+import { formatDistance, getDisplayName } from '../utils/formatting';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
 interface UserProfile {
   id: number;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   location_latitude?: number;
   location_longitude?: number;
   photos?: string[];
@@ -358,7 +358,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         setTimeout(() => {
           Alert.alert(
             '🎉 It\'s a Match!',
-            `You and ${currentProfile.name} liked each other!`,
+            `You and ${getDisplayName(currentProfile.name)} liked each other!`,
             [
               {
                 text: 'Keep Spinning',
@@ -369,7 +369,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 onPress: () => {
                   navigation.navigate('Chat', {
                     userId: currentProfile.id,
-                    userName: currentProfile.name,
+                    userName: getDisplayName(currentProfile.name),
                   });
                 },
               },
@@ -530,7 +530,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             ) : (
               <View style={styles.placeholderPhoto}>
                 <Text style={styles.placeholderPhotoText}>
-                  {currentProfile.name.charAt(0).toUpperCase()}
+                  {getDisplayName(currentProfile.name).charAt(0).toUpperCase()}
                 </Text>
               </View>
             )}
@@ -543,7 +543,7 @@ const SlotMachineScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
             style={styles.profileInfoContainer}
           >
             <View style={styles.profileInfo}>
-              <Text style={styles.profileName}>{currentProfile.name}</Text>
+              <Text style={styles.profileName}>{getDisplayName(currentProfile.name)}</Text>
               <Text style={styles.profileAge}>{currentProfile.age} years old</Text>
               {formatDistance(currentProfile.distance_km) && (
                 <Text style={styles.profileDistance}>

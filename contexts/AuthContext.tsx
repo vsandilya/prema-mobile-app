@@ -16,10 +16,10 @@ const api = axios.create({
 interface User {
   id: number;
   email: string;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   seeking_gender?: string;
   location_latitude?: number;
   location_longitude?: number;
@@ -161,10 +161,10 @@ interface BlockedUser {
 interface RegisterData {
   email: string;
   password: string;
-  name: string;
+  name?: string;
   age: number;
   bio?: string;
-  gender: string;
+  gender?: string;
   seeking_gender?: string;
   location_latitude?: number;
   location_longitude?: number;

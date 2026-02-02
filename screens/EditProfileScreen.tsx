@@ -46,6 +46,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   const genderOptions = [
     { label: 'Male', value: 'male' },
     { label: 'Female', value: 'female' },
+    { label: 'Prefer not to say', value: 'prefer_not_to_say' },
   ];
 
   const seekingGenderOptions = [
@@ -78,7 +79,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
   };
 
   const validateForm = () => {
-    if (!formData.name.trim() || !formData.age.trim() || !formData.gender.trim() || !formData.seeking_gender.trim()) {
+    if (!formData.age.trim() || !formData.seeking_gender.trim()) {
       Alert.alert('Error', 'Please fill in all required fields');
       return false;
     }
@@ -269,10 +270,10 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
     try {
       // Update profile fields
       await updateUser({
-        name: formData.name.trim(),
+        name: formData.name.trim() || undefined,
         age: parseInt(formData.age),
         bio: formData.bio.trim() || undefined,
-        gender: formData.gender,
+        gender: formData.gender || undefined,
         seeking_gender: formData.seeking_gender,
       });
 
@@ -352,12 +353,12 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
             <View style={styles.form}>
               {/* Name */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Full Name *</Text>
+                <Text style={styles.label}>Full Name</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.name}
                   onChangeText={(value) => handleInputChange('name', value)}
-                  placeholder="Enter your full name"
+                  placeholder="Optional - use a nickname if you prefer"
                   autoCapitalize="words"
                 />
               </View>
@@ -377,7 +378,7 @@ const EditProfileScreen: React.FC<EditProfileScreenProps> = ({ navigation }) => 
 
               {/* Gender */}
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Gender *</Text>
+                <Text style={styles.label}>Gender</Text>
                 <View style={styles.genderContainer}>
                   {genderOptions.map((option) => (
                     <TouchableOpacity
