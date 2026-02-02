@@ -233,7 +233,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
             onPress={() => handlePass(user)}
             disabled={isInteracting}
           >
-            <Text style={styles.passButtonText}>Pass</Text>
+            <Text style={styles.passButtonText}>✕</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -241,7 +241,7 @@ const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
             onPress={() => handleLikeBack(user)}
             disabled={isInteracting}
           >
-            <Text style={styles.likeButtonText}>Like Back</Text>
+            <Text style={styles.likeButtonText}>❤️</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -616,41 +616,52 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
+    justifyContent: 'center',
+    alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
     paddingBottom: 24,
     backgroundColor: 'rgba(0,0,0,0.25)',
-    gap: 12,
+    gap: 24,
   },
   passButton: {
-    flex: 1,
-    backgroundColor: '#D4A574',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#DC3545',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 14,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   likeButton: {
-    flex: 1,
-    backgroundColor: '#FF2D87',
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#28A745',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
-    paddingVertical: 14,
-    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
   },
   passButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   likeButtonText: {
-    fontSize: 16,
-    fontWeight: '600',
+    fontSize: 24,
+    fontWeight: 'bold',
     color: '#FFFFFF',
   },
   buttonDisabled: {

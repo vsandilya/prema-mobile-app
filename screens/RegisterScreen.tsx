@@ -171,12 +171,12 @@ const RegisterScreen: React.FC<RegisterScreenProps> = ({ navigation }) => {
               </View>
 
               <View style={styles.inputContainer}>
-                <Text style={styles.label}>Full Name</Text>
+                <Text style={styles.label}>Name (optional)</Text>
                 <TextInput
                   style={styles.input}
                   value={formData.name}
                   onChangeText={(value) => handleInputChange('name', value)}
-                  placeholder="Optional - use a nickname if you prefer"
+                  placeholder="Enter your name"
                   autoCapitalize="words"
                 />
               </View>
