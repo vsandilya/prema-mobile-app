@@ -36,9 +36,9 @@ interface LikesScreenProps {
   navigation: any;
 }
 
-const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
-const cardWidth = screenWidth - 40; // Account for horizontal margins
-const photoHeight = screenHeight * 0.4;
+const { width: screenWidth } = Dimensions.get('window');
+const cardWidth = screenWidth - 24; // Tighter horizontal margins
+const photoHeight = 260;
 
 const LikesScreen: React.FC<LikesScreenProps> = ({ navigation }) => {
   const { getUsersWhoLikedMe, likeUser, passUser } = useAuth();
@@ -501,20 +501,20 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   listContainer: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 12,
+    paddingBottom: 24,
   },
   userCard: {
-    marginBottom: 20,
+    marginBottom: 10,
     backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: 20,
+    borderRadius: 14,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
     overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
-    shadowRadius: 8,
+    shadowRadius: 6,
     elevation: 5,
   },
   cardContent: {
@@ -547,7 +547,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   placeholderPhotoText: {
-    fontSize: 80,
+    fontSize: 56,
     color: '#fff',
     fontWeight: 'bold',
   },
@@ -556,34 +556,34 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    minHeight: 100,
+    minHeight: 72,
   },
   photoTextGradient: {
     flex: 1,
     justifyContent: 'flex-end',
-    paddingHorizontal: 16,
-    paddingTop: 24,
-    paddingBottom: 14,
+    paddingHorizontal: 12,
+    paddingTop: 16,
+    paddingBottom: 10,
   },
   userName: {
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: 'bold',
     color: '#fff',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   userAge: {
-    fontSize: 16,
+    fontSize: 14,
     color: 'rgba(255,255,255,0.95)',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   userDistance: {
-    fontSize: 14,
+    fontSize: 12,
     color: 'rgba(255,255,255,0.9)',
     marginBottom: 0,
   },
   photoPaginationContainer: {
     position: 'absolute',
-    bottom: 110,
+    bottom: 78,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -604,30 +604,30 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   bioContainer: {
-    paddingHorizontal: 20,
-    paddingTop: 14,
-    paddingBottom: 16,
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 10,
     backgroundColor: 'rgba(0,0,0,0.25)',
   },
   bioText: {
-    fontSize: 16,
+    fontSize: 14,
     color: '#FFFFFF',
-    lineHeight: 24,
+    lineHeight: 20,
   },
   actionButtons: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    paddingBottom: 24,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    paddingBottom: 14,
     backgroundColor: 'rgba(0,0,0,0.25)',
-    gap: 24,
+    gap: 20,
   },
   passButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#DC3545',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
@@ -640,9 +640,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   likeButton: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     backgroundColor: '#28A745',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
@@ -655,12 +655,12 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   passButtonText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
   likeButtonText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: 'bold',
     color: '#FFFFFF',
   },
