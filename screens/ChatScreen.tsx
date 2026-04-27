@@ -45,7 +45,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const insets = useSafeAreaInsets();
   // iOS's outer SafeAreaView already accounts for the home indicator; only Android
   // needs the system nav bar inset added under edge-to-edge mode.
-  const bottomInset = Platform.OS === 'android' ? insets.bottom : 0;
+  // Some Android devices (e.g. Moto e6) report insets.bottom as 0 even with
+  // SafeAreaProvider mounted, so floor at 48dp to clear the 3-button nav bar.
+  const bottomInset = Platform.OS === 'android' ? Math.max(insets.bottom, 48) : 0;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
