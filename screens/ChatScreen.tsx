@@ -16,6 +16,7 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayName } from '../utils/formatting';
 import { useFocusEffect } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Message {
   id: number;
@@ -41,7 +42,11 @@ interface ChatScreenProps {
 const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const { userId, userName } = route.params;
   const { user, sendMessage, getMessagesWithUser, markMessageAsRead } = useAuth();
-  
+  const insets = useSafeAreaInsets();
+  // iOS's outer SafeAreaView already accounts for the home indicator; only Android
+  // needs the system nav bar inset added under edge-to-edge mode.
+  const bottomInset = Platform.OS === 'android' ? insets.bottom : 0;
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(true);
@@ -196,9 +201,9 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
         <Text style={styles.headerTitle}>{getDisplayName(userName)}</Text>
       </View>
 
-      <KeyboardAvoidingView 
+      <KeyboardAvoidingView
         style={styles.chatContainer}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
       >
         <FlatList
@@ -215,7 +220,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
-        <View style={styles.inputContainer}>
+        <View style={[styles.inputContainer, { paddingBottom: 10 + bottomInset }]}>
           {messageError ? (
             <Text style={styles.errorText}>{messageError}</Text>
           ) : null}
