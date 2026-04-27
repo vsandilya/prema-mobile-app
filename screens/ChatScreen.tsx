@@ -8,11 +8,11 @@ import {
   TouchableOpacity,
   Alert,
   ActivityIndicator,
-  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayName } from '../utils/formatting';
 import { useFocusEffect } from '@react-navigation/native';
@@ -41,11 +41,6 @@ interface ChatScreenProps {
 const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const { userId, userName } = route.params;
   const { user, sendMessage, getMessagesWithUser, markMessageAsRead } = useAuth();
-  // iOS's outer SafeAreaView already accounts for the home indicator; only Android
-  // needs space reserved under edge-to-edge mode for the nav bar. useSafeAreaInsets()
-  // returned 0 on first render on Moto e6, so use a static 48dp to clear the
-  // 3-button nav bar instead of relying on the hook.
-  const bottomInset = Platform.OS === 'android' ? 48 : 0;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -180,7 +175,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
 
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
+      <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color="#007AFF" />
           <Text style={styles.loadingText}>Loading messages...</Text>
@@ -190,7 +185,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       <View style={styles.header}>
         <TouchableOpacity
           style={styles.backButton}
@@ -220,7 +215,7 @@ const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
           onLayout={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
-        <View style={[styles.inputContainer, { paddingBottom: 10 + bottomInset }]}>
+        <View style={styles.inputContainer}>
           {messageError ? (
             <Text style={styles.errorText}>{messageError}</Text>
           ) : null}
