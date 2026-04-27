@@ -27,6 +27,8 @@ There is no test runner configured.
 
 **Runtime version gotcha**: `runtimeVersion.policy` is `"appVersion"`, which means OTA updates (`eas update`) only reach clients running the **same** `expo.version` from `app.json`. Bumping `expo.version` cuts a new runtime, and existing installs will not pick up the change via OTA — they require a fresh `eas build` and store/TestFlight distribution. Reserve version bumps for native/config changes; keep JS-only changes on the current version.
 
+**EAS Update channel wiring**: every build profile in `eas.json` must include a `"channel"` field that matches the EAS Update branch you publish to (e.g. `"channel": "production"` pairs with `eas update --branch production`). Without it, the build embeds no channel and `eas update` has no clients to deliver to — the publish succeeds but reaches no one. This was missed in the initial setup, so the 1.0.1 builds shipped to the field never received OTAs; 1.0.2 is the first build with channels wired (`production` → `production`, `preview` → `preview`).
+
 ## Architecture
 
 ### Navigation: React Navigation, NOT expo-router

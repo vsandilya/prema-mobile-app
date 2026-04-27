@@ -2,7 +2,7 @@
   "expo": {
     "name": "Prema",
     "slug": "mobile-app",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "orientation": "portrait",
     "icon": "./assets/images/prema-logo-2.png",
     "scheme": "mobileapp",
