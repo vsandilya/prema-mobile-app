@@ -16,7 +16,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { getDisplayName } from '../utils/formatting';
 import { useFocusEffect } from '@react-navigation/native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 interface Message {
   id: number;
@@ -42,12 +41,11 @@ interface ChatScreenProps {
 const ChatScreen: React.FC<ChatScreenProps> = ({ route, navigation }) => {
   const { userId, userName } = route.params;
   const { user, sendMessage, getMessagesWithUser, markMessageAsRead } = useAuth();
-  const insets = useSafeAreaInsets();
   // iOS's outer SafeAreaView already accounts for the home indicator; only Android
-  // needs the system nav bar inset added under edge-to-edge mode.
-  // Some Android devices (e.g. Moto e6) report insets.bottom as 0 even with
-  // SafeAreaProvider mounted, so floor at 48dp to clear the 3-button nav bar.
-  const bottomInset = Platform.OS === 'android' ? Math.max(insets.bottom, 48) : 0;
+  // needs space reserved under edge-to-edge mode for the nav bar. useSafeAreaInsets()
+  // returned 0 on first render on Moto e6, so use a static 48dp to clear the
+  // 3-button nav bar instead of relying on the hook.
+  const bottomInset = Platform.OS === 'android' ? 48 : 0;
 
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
